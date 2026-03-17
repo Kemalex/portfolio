@@ -41,26 +41,42 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:20px 64px;display:fl
   nav{padding:16px 20px}
   .burger{display:flex}
   .nav-cta{display:none}
+  .nav-mobile-cta{display:none!important}
   .nav-links{
     display:none;
     position:fixed;
-    top:0;left:0;right:0;bottom:0;
-    padding-top:80px;
-    background:rgba(2,6,23,.98);
+    top:53px;left:0;right:0;
+    background:rgba(2,6,23,.92);
     backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
     flex-direction:column;
-    align-items:center;
-    justify-content:center;
+    align-items:stretch;
+    justify-content:flex-start;
     gap:0;
     z-index:199;
     list-style:none;
+    padding:8px 16px 16px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    box-shadow:0 8px 32px rgba(0,0,0,.5);
   }
   .nav-links.open{display:flex}
-  .nav-links li{width:100%;max-width:320px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07)}
+  .nav-links li{width:100%;border-bottom:1px solid rgba(255,255,255,.06)}
   .nav-links li:last-child{border-bottom:none}
-  .nav-links a{display:block;padding:18px 24px;font-size:17px;font-weight:600;color:var(--text);white-space:normal}
-  .nav-mobile-cta{display:list-item;border-bottom:none!important;margin-top:24px}
-  .nav-mobile-cta a{display:inline-block;padding:13px 48px!important;background:var(--accent);color:#020617!important;font-weight:700;border-radius:8px;font-size:15px!important}
+  .nav-links a{
+    display:block;
+    padding:14px 16px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--text);
+    white-space:normal;
+    text-align:left;
+    border-radius:8px;
+    transition:background .15s,color .15s;
+  }
+  .nav-links a:hover,.nav-links a:active{
+    background:rgba(88,166,255,.1);
+    color:var(--accent);
+  }
 }
 
 /* HERO */
@@ -274,7 +290,7 @@ footer{position:relative;z-index:2;padding:32px 64px;border-top:1px solid var(--
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">АК <span>·</span> Portfolio</div>
+  <div class="nav-logo">АК<span>·</span> Portfolio</div>
   <ul class="nav-links">
     <li><a href="#employers" onclick="closeMenu()">ОПЫТ</a></li>
     <li><a href="#about" onclick="closeMenu()">О СЕБЕ</a></li>
@@ -366,6 +382,22 @@ footer{position:relative;z-index:2;padding:32px 64px;border-top:1px solid var(--
         <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 194 24" fill="none"><path d=" M72.8585 18.6581C71.3051 18.6581 69.9004 18.3887 68.6445 17.8486C67.3887 17.3084 66.4006 16.5644 65.6789 15.6136C64.9573 14.6628 64.5972 13.5974 64.5972 12.4174C64.5972 11.2374 64.9513 10.172 65.6581 9.22115C66.3649 8.2718 67.35 7.52632 68.6133 6.98617C69.8751 6.44603 71.2902 6.1767 72.8585 6.1767C74.4269 6.1767 75.8375 6.44603 77.0934 6.98617C78.3493 7.52632 79.3299 8.27032 80.0382 9.22115C80.745 10.172 81.0991 11.2374 81.0991 12.4174C81.0991 13.5974 80.745 14.6643 80.0382 15.6136C79.3314 16.5644 78.3493 17.3084 77.0934 17.8486C75.8375 18.3887 74.4254 18.6581 72.8585 18.6581ZM72.8585 17.1403C73.6353 17.1403 74.3123 16.9528 74.8882 16.5793C75.464 16.2043 75.9045 15.6612 76.2095 14.9485C76.5146 14.2357 76.6678 13.392 76.6678 12.4174C76.6678 11.4427 76.5146 10.599 76.2095 9.88629C75.9045 9.17354 75.464 8.63041 74.8882 8.25544C74.3123 7.88046 73.6353 7.69446 72.8585 7.69446C72.0818 7.69446 71.4048 7.8879 70.8289 8.27329C70.2531 8.66017 69.8096 9.20627 69.4972 9.91307C69.1847 10.6199 69.0284 11.4546 69.0284 12.4174C69.0284 13.3801 69.1847 14.2149 69.4972 14.9217C69.8096 15.6285 70.2531 16.1761 70.8289 16.5615C71.4048 16.9483 72.0803 17.1403 72.8585 17.1403ZM106.547 18.6581C104.993 18.6581 103.589 18.3887 102.333 17.8486C101.077 17.3084 100.089 16.5644 99.3673 15.6136C98.6456 14.6628 98.2855 13.5974 98.2855 12.4174C98.2855 11.2374 98.6397 10.172 99.3465 9.22115C100.053 8.2718 101.038 7.52632 102.302 6.98617C103.563 6.44603 104.979 6.1767 106.547 6.1767C108.115 6.1767 109.526 6.44603 110.782 6.98617C112.038 7.52632 113.018 8.27032 113.727 9.22115C114.433 10.172 114.787 11.2374 114.787 12.4174C114.787 13.5974 114.433 14.6643 113.727 15.6136C113.02 16.5644 112.038 17.3084 110.782 17.8486C109.526 18.3887 108.114 18.6581 106.547 18.6581ZM106.547 17.1403C107.324 17.1403 108.001 16.9528 108.577 16.5793C109.152 16.2043 109.593 15.6612 109.898 14.9485C110.203 14.2357 110.356 13.392 110.356 12.4174C110.356 11.4427 110.203 10.599 109.898 9.88629C109.593 9.17354 109.152 8.63041 108.577 8.25544C108.001 7.88046 107.324 7.69446 106.547 7.69446C105.77 7.69446 105.093 7.8879 104.517 8.27329C103.941 8.66017 103.498 9.20627 103.186 9.91307C102.873 10.6199 102.717 11.4546 102.717 12.4174C102.717 13.3801 102.873 14.2149 103.186 14.9217C103.498 15.6285 103.941 16.1761 104.517 16.5615C105.093 16.9483 105.769 17.1403 106.547 17.1403ZM45.6906 18.3203V6.51447H49.3109L54.3061 12.2656H54.4936L59.5082 6.51447H62.9633V18.3203H58.8014V11.2359H58.6139L53.9728 16.4647H53.2244L48.5833 11.2359H48.3958V18.3203H45.6906ZM164.405 18.3203V6.51447H168.379V14.1211H168.567L174.811 6.51447H178.597V18.3203H174.623V10.7136H174.436L168.192 18.3203H164.405ZM187.924 6.51447C186.537 6.51447 185.344 6.6603 184.346 6.95344C183.347 7.24657 182.579 7.66768 182.047 8.21824C181.512 8.7688 181.246 9.43245 181.246 10.2092C181.246 10.7493 181.398 11.2582 181.704 11.7359C182.009 12.2135 182.437 12.6078 182.984 12.9174C183.362 13.1316 183.773 13.2849 184.215 13.3831L180.062 18.3233H184.474L187.887 14.1747H189.823V18.3233H193.985V6.51745H187.929L187.924 6.51447ZM188.091 12.3832C187.591 12.3832 187.155 12.2983 186.78 12.1302C186.405 11.962 186.115 11.7225 185.907 11.413C185.698 11.1035 185.594 10.7464 185.594 10.3416C185.594 9.93688 185.698 9.57976 185.907 9.27026C186.115 8.96075 186.407 8.72267 186.78 8.55304C187.155 8.38489 187.591 8.30008 188.091 8.30008H189.819V12.3817H188.091V12.3832ZM140.139 18.7116C138.585 18.7116 137.18 18.4423 135.925 17.9022C134.669 17.362 133.681 16.618 132.959 15.6672C132.237 14.7163 131.877 13.6509 131.877 12.471C131.877 11.291 132.231 10.2255 132.938 9.27472C133.645 8.32537 134.63 7.57988 135.893 7.03974C137.155 6.49959 138.57 6.23026 140.139 6.23026C141.707 6.23026 143.118 6.49959 144.373 7.03974C145.629 7.57988 146.61 8.32388 147.318 9.27472C148.025 10.2255 148.379 11.291 148.379 12.471C148.379 13.6509 148.025 14.7178 147.318 15.6672C146.611 16.618 145.629 17.362 144.373 17.9022C143.118 18.4423 141.705 18.7116 140.139 18.7116ZM140.139 17.1939C140.915 17.1939 141.592 17.0064 142.168 16.6329C142.744 16.2579 143.185 15.7148 143.49 15.002C143.795 14.2893 143.948 13.4456 143.948 12.471C143.948 11.4963 143.795 10.6526 143.49 9.93986C143.185 9.2271 142.744 8.68398 142.168 8.309C141.592 7.93403 140.915 7.74803 140.139 7.74803C139.362 7.74803 138.685 7.94147 138.109 8.32686C137.533 8.71374 137.09 9.25984 136.777 9.96664C136.465 10.6734 136.308 11.5082 136.308 12.471C136.308 13.4337 136.465 14.2685 136.777 14.9753C137.09 15.6821 137.533 16.2296 138.109 16.615C138.685 17.0019 139.36 17.1939 140.139 17.1939ZM147.861 18.3277L153.667 6.48918H157.268L163.075 18.3277H158.642L154.937 10.0753H154.749L150.858 18.3277H147.861ZM116.433 18.3203V6.51447H130.23V18.3203H126.068V8.98456H120.595V18.3203H116.433ZM92.4793 6.51447V11.166H86.9023V6.51447H82.7404V18.3203H86.9023V13.6361H92.4793V18.3203H96.6413V6.51447H92.4793ZM31.3894 12.4858L26.0892 6.51746H39.133L33.8327 12.4858C33.1825 13.2135 32.0412 13.2135 31.3983 12.4858H31.3894ZM27.0697 0L16.435 11.785C14.8875 13.5096 12.1823 13.5096 10.6273 11.785L4.56519 5.05474L0 0H7.01742L13.5423 7.16771L20.0538 0H27.0697ZM31.1454 15.4961L23.9509 23.3661C23.1727 24.2113 21.8364 24.2113 21.0597 23.3661L15.7594 17.5599C15.7222 17.5227 15.685 17.4855 15.6493 17.4483L13.8563 15.4871H19.4021L22.5001 18.9155L22.5046 18.92L25.5996 15.4961H31.1454Z" fill="currentColor"></path></svg>
       </div>
 
+   <!-- Т1 -->
+      <div class="employer-item" title="ИТ-Холдинг Т1 — 2 года (2024–наст. время)">
+        <svg xmlns="http://www.w3.org/2000/svg"
+     width="100%"
+     height="100%"
+     viewBox="0 0 82 32"
+     fill="none"
+     preserveAspectRatio="xMidYMid meet"
+     class="logostyles__SvgStyled-header__sc-t5152p-0 ixKNTg">
+  <path d="M72.8093 6.35938H53.6667V10.5987H61.1186V25.5731H65.3573V10.5987H72.8093V6.35938Z" fill="currentColor"></path>
+  <path d="M81.2094 6.29425H76.8333V10.6019V25.5763H81.2094V6.29425Z" fill="currentColor"></path>
+  <path d="M19.2051 12.7863H31.9212V19.2821H19.2051V32H12.7786V19.2137H0.0625V12.7179H12.7786V0H19.2051V12.7863ZM38.3476 0V32H44.7741V0H38.3476Z" fill="currentColor"></path>
+</svg>
+
+      </div>
+
       <!-- ПОЧТА БАНК -->
       <div class="employer-item" title="Почта Банк — 3 года 4 мес (2022–наст. время)">
         <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 83 40" fill="none">
@@ -418,10 +450,10 @@ footer{position:relative;z-index:2;padding:32px 64px;border-top:1px solid var(--
       <p class="about-text">Прошёл путь от аналитика CVM в <strong>Сбере</strong> до IT-лида команды в <strong>Почта Банке</strong>. Работал в <strong>Эвоторе</strong> (FinTech, платёжные сервисы) и <strong>Монополии</strong> (логистика, платформенные сервисы).</p>
       <p class="about-text">Мой подход — не просто управлять задачами, а понимать архитектуру систем, читать данные, проектировать API. <strong>Результаты измеряю в сроках, метриках и довольных пользователях.</strong></p>
       <div class="about-cards">
-        <div class="about-card glass"><div class="about-card-icon">⚡</div><div class="about-card-title">Agile-лидер</div><div class="about-card-text">Scrum, Kanban, SAFe — строю процессы под команду</div></div>
+        <div class="about-card glass"><div class="about-card-icon">⚡</div><div class="about-card-title">Agile-лидер</div><div class="about-card-text">Scrum, Kanban, LeSS - строю процессы под команду</div></div>
         <div class="about-card glass"><div class="about-card-icon">🔍</div><div class="about-card-title">Системный аналитик</div><div class="about-card-text">UML, BPMN, требования, интеграции</div></div>
         <div class="about-card glass"><div class="about-card-icon">📊</div><div class="about-card-title">Data-driven</div><div class="about-card-text">BI, дашборды, аналитика продукта</div></div>
-        <div class="about-card glass"><div class="about-card-icon">🏗️</div><div class="about-card-title">Технический бэкграунд</div><div class="about-card-text">SQL, REST API, архитектура сервисов</div></div>
+        <div class="about-card glass"><div class="about-card-icon">🏗️</div><div class="about-card-title">Технический бэкграунд</div><div class="about-card-text">SQL, SOAP/REST API, архитектура сервисов</div></div>
       </div>
     </div>
   </div>
@@ -633,11 +665,11 @@ footer{position:relative;z-index:2;padding:32px 64px;border-top:1px solid var(--
 </section>
 
 <footer>
-  <div class="footer-copy">©Kemalex 2024-2026 Александр Кемаев — Project Manager & Fullstack Analyst</div>
-  <a href="#" class="footer-top">↑ НАВЕРХ</a>
+  <div class="footer-copy">©Kemalex 2026 Александр Кемаев - Project Manager & Fullstack Analyst</div>
+  <a href="#" class="footer-top">↑ Наверх</a>
 </footer>
 
-<script>
+<script> 
 // Mobile burger menu
 function toggleMenu(){
   var menu = document.querySelector('.nav-links');
@@ -657,9 +689,14 @@ function closeMenu(){
 const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:0.1});
 document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
-  a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t){t.scrollIntoView({behavior:'smooth'});history.pushState(null,null,a.getAttribute('href'))}
+  a.addEventListener('click',e=>{
+    var href=a.getAttribute('href');
+    if(!href||href==='#')return;
+    var t=document.querySelector(href);
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});history.pushState(null,null,href);}
+  });history.pushState(null,null,a.getAttribute('href'))
   });
-});
+;
 
 // Nav highlight on scroll
 const navLinks = document.querySelectorAll('.nav-link');
@@ -673,7 +710,7 @@ window.addEventListener('scroll',()=>{
     const bottom = top + el.offsetHeight;
     if(scrollY >= top && scrollY < bottom){
       navLinks.forEach(l=>l.classList.remove('active'));
-      const active = document.querySelector('.nav-link[href="#'+id+'"]');
+      const active = document.querySelector('.nav-link[href="#hero'+id+'"]');
       if(active) active.classList.add('active');
     }
   });
