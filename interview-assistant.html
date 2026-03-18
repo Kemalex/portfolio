@@ -1,0 +1,3022 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>interview.assist — Подготовка к техническому интервью</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: rgba(255,255,255,0.03);
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e8f0;
+    --muted: #666;
+    --accent: #00d4aa;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    min-height: 100vh;
+  }
+
+  /* Topbar */
+  #topbar {
+    background: rgba(10,10,15,0.92);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .logo span { color: var(--accent); }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #888;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .nav-btn.active {
+    background: rgba(0,212,170,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .timer-area {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #timer-display {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--accent);
+    min-width: 64px;
+    text-align: center;
+    display: none;
+  }
+  #timer-display.panic {
+    color: #ff6b6b;
+    animation: pulse 0.5s infinite;
+  }
+
+  .timer-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #aaa;
+    padding: 4px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .timer-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Main container */
+  #main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* Views */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Page header */
+  .page-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    color: #555;
+    font-size: 12px;
+    margin-bottom: 24px;
+  }
+
+  /* Topics grid */
+  #topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .topic-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 14px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .topic-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--tc, var(--accent));
+  }
+  .topic-card:hover { background: rgba(255,255,255,0.055); transform: translateY(-1px); }
+  .topic-icon { font-size: 26px; margin-bottom: 8px; display: block; }
+  .topic-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .topic-count { font-size: 11px; color: #555; }
+
+  /* Back button */
+  .back-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    margin-bottom: 16px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.15s;
+  }
+  .back-btn:hover { color: #aaa; }
+
+  /* Topic detail header */
+  .topic-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .topic-detail-icon { font-size: 32px; }
+  .topic-detail-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .topic-accent-bar { height: 2px; width: 40px; margin-top: 6px; border-radius: 2px; }
+
+  /* Question cards */
+  .q-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .q-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .q-head {
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .q-meta { display: flex; gap: 10px; flex: 1; }
+
+  .q-num {
+    font-size: 11px;
+    font-weight: 700;
+    padding-top: 1px;
+    min-width: 24px;
+  }
+
+  .q-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ddd;
+    line-height: 1.5;
+  }
+
+  .hint-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #666;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .hint-btn.revealed {
+    background: rgba(0,212,170,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .q-hint {
+    display: none;
+    padding: 14px 18px;
+    font-size: 12px;
+    line-height: 1.75;
+    color: #bbb;
+    border-top-width: 1px;
+    border-top-style: solid;
+  }
+  .q-hint.open { display: block; }
+  .hint-text { margin-bottom: 4px; }
+  .q-svg {
+    margin-top: 14px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.25);
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+  }
+  .q-svg svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Search */
+  #search-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 13px 18px;
+    font-size: 14px;
+    color: #fff;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+  }
+  #search-input:focus { border-color: rgba(0,212,170,0.4); }
+
+  #search-count { font-size: 11px; color: #555; margin-bottom: 14px; }
+
+  .sr-topic-label {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  /* AI */
+  #ai-question {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 13px 18px;
+    font-size: 13px;
+    color: #fff;
+    font-family: inherit;
+    outline: none;
+    resize: none;
+    transition: border-color 0.15s;
+  }
+  #ai-question:focus { border-color: rgba(0,212,170,0.4); }
+
+  .ai-row { display: flex; gap: 8px; margin-bottom: 14px; }
+
+  #ai-ask-btn {
+    background: rgba(0,212,170,0.15);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 700;
+    white-space: nowrap;
+    align-self: stretch;
+    transition: all 0.15s;
+  }
+  #ai-ask-btn:hover { background: rgba(0,212,170,0.25); }
+  #ai-ask-btn:disabled { opacity: 0.5; cursor: wait; }
+
+  .quick-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .qp-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #888;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .qp-btn:hover { border-color: rgba(255,255,255,0.2); color: #bbb; }
+
+  #ai-loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    font-size: 13px;
+    padding: 16px 0;
+  }
+  #ai-loading.show { display: flex; }
+  .spinner { animation: spin 1s linear infinite; font-size: 18px; }
+
+  #ai-answer {
+    display: none;
+    background: rgba(0,212,170,0.05);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 10px;
+    padding: 20px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #ccc;
+    white-space: pre-wrap;
+  }
+  #ai-answer.show { display: block; }
+
+  /* Quickref */
+  #qr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+  }
+
+  .qr-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .qr-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .qr-item {
+    font-size: 12px;
+    color: #999;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    gap: 6px;
+  }
+
+  .qr-bullet { min-width: 12px; opacity: 0.35; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  .qr-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .qr-tab {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .qr-tab.active, .qr-tab:hover {
+    border-color: currentColor;
+    color: #fff;
+    background: rgba(255,255,255,0.07);
+  }
+
+  /* Wide card — full-width with sections */
+  .qr-card-wide {
+    grid-column: 1 / -1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 4px;
+  }
+  .qr-wide-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .qr-wide-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .qr-wide-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    opacity: 0.7;
+    border: 1px solid currentColor;
+  }
+  .qr-wide-desc {
+    font-size: 12px;
+    color: #666;
+    margin-left: auto;
+    max-width: 400px;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .qr-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .qr-section {
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .qr-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .qr-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+  .qr-section .qr-item {
+    font-size: 12px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    line-height: 1.45;
+  }
+  .qr-section .qr-item:last-child { border-bottom: none; }
+  .qr-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 4px;
+    opacity: 0.75;
+    vertical-align: middle;
+  }
+  .tag-plus  { background: #26de8122; color: #26de81; border: 1px solid #26de8144; }
+  .tag-minus { background: #ff475722; color: #ff4757; border: 1px solid #ff475744; }
+  .tag-note  { background: #ffd93d22; color: #ffd93d; border: 1px solid #ffd93d44; }
+  .tag-when  { background: #4cc9f022; color: #4cc9f0; border: 1px solid #4cc9f044; }
+  .tag-tip   { background: #c77dff22; color: #c77dff; border: 1px solid #c77dff44; }
+
+  /* ── VACANCY ─────────────────────────────────────────────── */
+  .nav-btn-vacancy {
+    border-color: #ffd93d44;
+    color: #ffd93d;
+  }
+  .nav-btn-vacancy.active, .nav-btn-vacancy:hover {
+    background: #ffd93d22;
+    border-color: #ffd93d;
+    color: #ffd93d;
+  }
+  .vac-hero {
+    background: linear-gradient(135deg, #ffd93d08 0%, #ff6b6b08 100%);
+    border: 1px solid #ffd93d22;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+  }
+  .vac-company {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #ffd93d;
+    margin-bottom: 6px;
+  }
+  .vac-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .vac-tag {
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #aaa;
+  }
+  .vac-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .vac-tab {
+    padding: 7px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .vac-tab.active, .vac-tab:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  /* Прогноз вопросов */
+  .vac-questions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .vq-block {
+    background: var(--bg2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .vq-block-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .vq-block-header:hover { background: rgba(255,255,255,0.03); }
+  .vq-block-title {
+    font-size: 13px;
+    font-weight: 700;
+    flex: 1;
+  }
+  .vq-block-meta {
+    font-size: 11px;
+    color: #555;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .vq-prob {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .prob-high   { background: #ff475720; color: #ff4757; border: 1px solid #ff475744; }
+  .prob-mid    { background: #ffd93d20; color: #ffd93d; border: 1px solid #ffd93d44; }
+  .prob-low    { background: #26de8120; color: #26de81; border: 1px solid #26de8144; }
+  .vq-chevron { color: #444; font-size: 10px; transition: transform 0.2s; }
+  .vq-chevron.open { transform: rotate(90deg); }
+  .vq-body {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .vq-body.open { display: block; }
+  .vq-question {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .vq-question:last-child { border-bottom: none; }
+  .vq-q-num {
+    min-width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .vq-q-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #ccc;
+    flex: 1;
+  }
+  .vq-q-hint {
+    font-size: 11px;
+    color: #555;
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+  .vq-q-hint b { color: #777; }
+
+  /* Шпаргалка под вакансию */
+  .vac-cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .vac-card {
+    background: var(--bg2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+  .vac-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .vac-card-item {
+    font-size: 12px;
+    color: #999;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    line-height: 1.5;
+    display: flex;
+    gap: 7px;
+  }
+  .vac-card-item:last-child { border-bottom: none; }
+  .vac-card-wide {
+    grid-column: 1 / -1;
+    background: var(--bg2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 18px 20px;
+  }
+  .vac-wide-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  @media (max-width: 600px) {
+    .page-title { font-size: 20px; }
+    #topbar { padding: 8px 12px; }
+    .logo { font-size: 14px; }
+    .timer-area { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo"><span>></span> interview<span>.</span>assist</div>
+
+  <div class="nav-tabs">
+    <button class="nav-btn active" onclick="switchView('topics')">Темы</button>
+    <button class="nav-btn" onclick="switchView('search')">Поиск</button>
+    <button class="nav-btn" onclick="switchView('ai')">AI подсказка</button>
+    <button class="nav-btn" onclick="switchView('quickref')">Шпаргалка</button>
+    <button class="nav-btn nav-btn-vacancy" onclick="switchView('vacancy')">🎯 Вакансия</button>
+  </div>
+
+  <div class="timer-area">
+    <div id="timer-display">00:00</div>
+    <button class="timer-btn" onclick="startTimer(1)">1м</button>
+    <button class="timer-btn" onclick="startTimer(3)">3м</button>
+    <button class="timer-btn" onclick="startTimer(5)">5м</button>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- TOPICS VIEW -->
+  <div id="view-topics" class="view active">
+    <div class="page-title">Технические темы</div>
+    <div class="page-sub">Выбери тему → просматривай вопросы → раскрывай подсказки одним кликом</div>
+    <div id="topics-grid"></div>
+  </div>
+
+  <!-- TOPIC DETAIL VIEW -->
+  <div id="view-topic-detail" class="view">
+    <button class="back-btn" onclick="backToTopics()">← Назад к темам</button>
+    <div class="topic-detail-header">
+      <span class="topic-detail-icon" id="detail-icon"></span>
+      <div>
+        <div class="topic-detail-name" id="detail-name"></div>
+        <div class="topic-accent-bar" id="detail-bar"></div>
+      </div>
+    </div>
+    <div class="q-list" id="detail-questions"></div>
+  </div>
+
+  <!-- SEARCH VIEW -->
+  <div id="view-search" class="view">
+    <div class="page-title">Поиск</div>
+    <div class="page-sub">Быстрый поиск по всем темам и подсказкам</div>
+    <input id="search-input" type="text" placeholder="Введи ключевое слово..." oninput="doSearch(this.value)" autocomplete="off" spellcheck="false">
+    <div id="search-count"></div>
+    <div class="q-list" id="search-results"></div>
+  </div>
+
+  <!-- AI VIEW -->
+  <div id="view-ai" class="view">
+    <div class="page-title">AI подсказка</div>
+    <div class="page-sub">Задай любой вопрос с интервью — Claude даст структурированный ответ (Ctrl+Enter)</div>
+    <div class="ai-row">
+      <textarea id="ai-question" rows="3" placeholder="Введи вопрос с интервью..."></textarea>
+      <button id="ai-ask-btn" onclick="askAI()">Спросить</button>
+    </div>
+    <div class="quick-prompts" id="quick-prompts"></div>
+    <div id="ai-loading"><span class="spinner">⟳</span> Получаю ответ от Claude...</div>
+    <div id="ai-answer"></div>
+  </div>
+
+  <!-- QUICKREF VIEW -->
+  <div id="view-quickref" class="view">
+    <div class="page-title">Быстрая шпаргалка</div>
+    <div class="page-sub">Ключевые факты под рукой</div>
+    <div class="qr-tabs" id="qr-tabs"></div>
+    <div id="qr-grid"></div>
+  </div>
+
+  <!-- VACANCY VIEW -->
+  <div id="view-vacancy" class="view">
+    <div class="vac-hero">
+      <div class="vac-company">Технократия</div>
+      <div class="page-title" style="margin-bottom:6px">Системный аналитик <span style="color:#ffd93d">Senior</span></div>
+      <div class="page-sub">Платёжная система · Remote · от 5 лет</div>
+      <div class="vac-tags">
+        <span class="vac-tag">💳 Платёжные системы</span>
+        <span class="vac-tag">🏗️ Микросервисы</span>
+        <span class="vac-tag">📋 UML / BPMN / C4</span>
+        <span class="vac-tag">🌐 REST API</span>
+        <span class="vac-tag">🗄️ SQL</span>
+        <span class="vac-tag">📨 Брокеры сообщений</span>
+      </div>
+    </div>
+    <div class="vac-tabs" id="vac-tabs"></div>
+    <div id="vac-content"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── SVG DIAGRAMS ─────────────────────────────────────────────────────────────
+const D = {
+
+// HTTP методы — таблица идемпотентности
+httpMethods: `<svg viewBox="0 0 560 230" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="12">
+  <rect width="560" height="230" rx="8" fill="#0d0d18"/>
+  <!-- header row -->
+  <rect x="10" y="10" width="130" height="30" rx="4" fill="#00d4aa22"/><text x="75" y="30" fill="#00d4aa" text-anchor="middle" font-weight="700">Метод</text>
+  <rect x="148" y="10" width="120" height="30" rx="4" fill="#00d4aa22"/><text x="208" y="30" fill="#00d4aa" text-anchor="middle" font-weight="700">Идемпотент.</text>
+  <rect x="276" y="10" width="120" height="30" rx="4" fill="#00d4aa22"/><text x="336" y="30" fill="#00d4aa" text-anchor="middle" font-weight="700">Безопасный</text>
+  <rect x="404" y="10" width="145" height="30" rx="4" fill="#00d4aa22"/><text x="476" y="30" fill="#00d4aa" text-anchor="middle" font-weight="700">Тело запроса</text>
+  <!-- rows -->
+  <text x="75" y="62" fill="#eee" text-anchor="middle">GET</text><text x="208" y="62" fill="#26de81" text-anchor="middle">✓</text><text x="336" y="62" fill="#26de81" text-anchor="middle">✓</text><text x="476" y="62" fill="#ff6b6b" text-anchor="middle">✗</text>
+  <rect x="10" y="68" width="539" height="1" fill="#ffffff0f"/>
+  <text x="75" y="92" fill="#eee" text-anchor="middle">POST</text><text x="208" y="92" fill="#ff6b6b" text-anchor="middle">✗</text><text x="336" y="92" fill="#ff6b6b" text-anchor="middle">✗</text><text x="476" y="92" fill="#26de81" text-anchor="middle">✓</text>
+  <rect x="10" y="98" width="539" height="1" fill="#ffffff0f"/>
+  <text x="75" y="122" fill="#eee" text-anchor="middle">PUT</text><text x="208" y="122" fill="#26de81" text-anchor="middle">✓</text><text x="336" y="122" fill="#ff6b6b" text-anchor="middle">✗</text><text x="476" y="122" fill="#26de81" text-anchor="middle">✓</text>
+  <rect x="10" y="128" width="539" height="1" fill="#ffffff0f"/>
+  <text x="75" y="152" fill="#eee" text-anchor="middle">PATCH</text><text x="208" y="152" fill="#ff6b6b" text-anchor="middle">✗</text><text x="336" y="152" fill="#ff6b6b" text-anchor="middle">✗</text><text x="476" y="152" fill="#26de81" text-anchor="middle">✓</text>
+  <rect x="10" y="158" width="539" height="1" fill="#ffffff0f"/>
+  <text x="75" y="182" fill="#eee" text-anchor="middle">DELETE</text><text x="208" y="182" fill="#26de81" text-anchor="middle">✓</text><text x="336" y="182" fill="#ff6b6b" text-anchor="middle">✗</text><text x="476" y="182" fill="#ff6b6b" text-anchor="middle">✗</text>
+  <rect x="10" y="188" width="539" height="1" fill="#ffffff0f"/>
+  <text x="75" y="212" fill="#eee" text-anchor="middle">HEAD</text><text x="208" y="212" fill="#26de81" text-anchor="middle">✓</text><text x="336" y="212" fill="#26de81" text-anchor="middle">✓</text><text x="476" y="212" fill="#ff6b6b" text-anchor="middle">✗</text>
+</svg>`,
+
+// HTTP коды ответов — визуальные группы
+httpCodes: `<svg viewBox="0 0 560 160" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="160" rx="8" fill="#0d0d18"/>
+  <rect x="10" y="10" width="98" height="140" rx="6" fill="#4cc9f022"/>
+  <text x="59" y="35" fill="#4cc9f0" text-anchor="middle" font-weight="700" font-size="13">1xx</text>
+  <text x="59" y="55" fill="#4cc9f0" text-anchor="middle">Инфо</text>
+  <text x="59" y="75" fill="#888" text-anchor="middle">100 Continue</text>
+  <text x="59" y="93" fill="#888" text-anchor="middle">101 Switching</text>
+
+  <rect x="118" y="10" width="98" height="140" rx="6" fill="#26de8122"/>
+  <text x="167" y="35" fill="#26de81" text-anchor="middle" font-weight="700" font-size="13">2xx</text>
+  <text x="167" y="55" fill="#26de81" text-anchor="middle">Успех</text>
+  <text x="167" y="75" fill="#888" text-anchor="middle">200 OK</text>
+  <text x="167" y="93" fill="#888" text-anchor="middle">201 Created</text>
+  <text x="167" y="111" fill="#888" text-anchor="middle">204 No Content</text>
+
+  <rect x="226" y="10" width="98" height="140" rx="6" fill="#ffd93d22"/>
+  <text x="275" y="35" fill="#ffd93d" text-anchor="middle" font-weight="700" font-size="13">3xx</text>
+  <text x="275" y="55" fill="#ffd93d" text-anchor="middle">Редирект</text>
+  <text x="275" y="75" fill="#888" text-anchor="middle">301 Permanent</text>
+  <text x="275" y="93" fill="#888" text-anchor="middle">302 Found</text>
+  <text x="275" y="111" fill="#888" text-anchor="middle">304 Not Modified</text>
+
+  <rect x="334" y="10" width="98" height="140" rx="6" fill="#ff9f4322"/>
+  <text x="383" y="35" fill="#ff9f43" text-anchor="middle" font-weight="700" font-size="13">4xx</text>
+  <text x="383" y="55" fill="#ff9f43" text-anchor="middle">Ошибка клиента</text>
+  <text x="383" y="75" fill="#888" text-anchor="middle">400 Bad Request</text>
+  <text x="383" y="93" fill="#888" text-anchor="middle">401 Unauth</text>
+  <text x="383" y="111" fill="#888" text-anchor="middle">403 Forbidden</text>
+  <text x="383" y="129" fill="#888" text-anchor="middle">404 Not Found</text>
+
+  <rect x="442" y="10" width="108" height="140" rx="6" fill="#ff475722"/>
+  <text x="496" y="35" fill="#ff4757" text-anchor="middle" font-weight="700" font-size="13">5xx</text>
+  <text x="496" y="55" fill="#ff4757" text-anchor="middle">Ошибка сервера</text>
+  <text x="496" y="75" fill="#888" text-anchor="middle">500 Internal</text>
+  <text x="496" y="93" fill="#888" text-anchor="middle">502 Bad Gateway</text>
+  <text x="496" y="111" fill="#888" text-anchor="middle">503 Unavailable</text>
+</svg>`,
+
+// SQL JOIN — диаграммы Венна
+sqlJoin: `<svg viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="190" rx="8" fill="#0d0d18"/>
+  <!-- INNER -->
+  <circle cx="64" cy="90" r="38" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <circle cx="96" cy="90" r="38" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <ellipse cx="80" cy="90" rx="18" ry="35" fill="#ff6b6b55"/>
+  <text x="80" y="152" fill="#ff6b6b" text-anchor="middle" font-weight="700">INNER</text>
+  <text x="80" y="167" fill="#888" text-anchor="middle">совпадения</text>
+  <!-- LEFT -->
+  <circle cx="200" cy="90" r="38" fill="#26de8144" stroke="#26de81" stroke-width="1.5"/>
+  <circle cx="232" cy="90" r="38" fill="#26de8111" stroke="#26de81" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="216" y="152" fill="#26de81" text-anchor="middle" font-weight="700">LEFT</text>
+  <text x="216" y="167" fill="#888" text-anchor="middle">вся левая</text>
+  <!-- RIGHT -->
+  <circle cx="340" cy="90" r="38" fill="#4cc9f011" stroke="#4cc9f0" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <circle cx="372" cy="90" r="38" fill="#4cc9f044" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="356" y="152" fill="#4cc9f0" text-anchor="middle" font-weight="700">RIGHT</text>
+  <text x="356" y="167" fill="#888" text-anchor="middle">вся правая</text>
+  <!-- FULL OUTER -->
+  <circle cx="480" cy="90" r="38" fill="#c77dff33" stroke="#c77dff" stroke-width="1.5"/>
+  <circle cx="512" cy="90" r="38" fill="#c77dff33" stroke="#c77dff" stroke-width="1.5"/>
+  <text x="496" y="152" fill="#c77dff" text-anchor="middle" font-weight="700">FULL</text>
+  <text x="496" y="167" fill="#888" text-anchor="middle">все строки</text>
+  <!-- labels A B -->
+  <text x="54" y="93" fill="#fff8" text-anchor="middle" font-size="10">A</text>
+  <text x="106" y="93" fill="#fff8" text-anchor="middle" font-size="10">B</text>
+  <text x="190" y="93" fill="#fff8" text-anchor="middle" font-size="10">A</text>
+  <text x="242" y="93" fill="#fff8" text-anchor="middle" font-size="10">B</text>
+  <text x="330" y="93" fill="#fff8" text-anchor="middle" font-size="10">A</text>
+  <text x="382" y="93" fill="#fff8" text-anchor="middle" font-size="10">B</text>
+  <text x="470" y="93" fill="#fff8" text-anchor="middle" font-size="10">A</text>
+  <text x="522" y="93" fill="#fff8" text-anchor="middle" font-size="10">B</text>
+</svg>`,
+
+// Уровни изоляции SQL
+sqlIsolation: `<svg viewBox="0 0 560 185" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="185" rx="8" fill="#0d0d18"/>
+  <text x="280" y="22" fill="#888" text-anchor="middle" font-size="10">← слабее изоляция · · · · · · · · сильнее →</text>
+  <!-- bars -->
+  <rect x="10" y="35" width="120" height="42" rx="5" fill="#ff475733"/><text x="70" y="52" fill="#ff4757" text-anchor="middle" font-weight="700">READ</text><text x="70" y="67" fill="#ff4757" text-anchor="middle">UNCOMMITTED</text>
+  <rect x="146" y="35" width="120" height="42" rx="5" fill="#ff9f4333"/><text x="206" y="52" fill="#ff9f43" text-anchor="middle" font-weight="700">READ</text><text x="206" y="67" fill="#ff9f43" text-anchor="middle">COMMITTED</text>
+  <rect x="282" y="35" width="120" height="42" rx="5" fill="#ffd93d33"/><text x="342" y="52" fill="#ffd93d" text-anchor="middle" font-weight="700">REPEATABLE</text><text x="342" y="67" fill="#ffd93d" text-anchor="middle">READ</text>
+  <rect x="418" y="35" width="132" height="42" rx="5" fill="#26de8133"/><text x="484" y="52" fill="#26de81" text-anchor="middle" font-weight="700">SERIALIZABLE</text><text x="484" y="67" fill="#26de81" text-anchor="middle">полная изол.</text>
+  <!-- problems -->
+  <text x="30" y="105" fill="#888" font-size="10">Грязное чтение</text>
+  <text x="70" y="120" fill="#ff4757" text-anchor="middle">✓ есть</text><text x="206" y="120" fill="#26de81" text-anchor="middle">✗ нет</text><text x="342" y="120" fill="#26de81" text-anchor="middle">✗ нет</text><text x="484" y="120" fill="#26de81" text-anchor="middle">✗ нет</text>
+  <text x="30" y="138" fill="#888" font-size="10">Неповтор. чтение</text>
+  <text x="70" y="153" fill="#ff4757" text-anchor="middle">✓ есть</text><text x="206" y="153" fill="#ff4757" text-anchor="middle">✓ есть</text><text x="342" y="153" fill="#26de81" text-anchor="middle">✗ нет</text><text x="484" y="153" fill="#26de81" text-anchor="middle">✗ нет</text>
+  <text x="30" y="171" fill="#888" font-size="10">Фантомы</text>
+  <text x="70" y="178" fill="#ff4757" text-anchor="middle">✓</text><text x="206" y="178" fill="#ff4757" text-anchor="middle">✓</text><text x="342" y="178" fill="#ff4757" text-anchor="middle">✓</text><text x="484" y="178" fill="#26de81" text-anchor="middle">✗</text>
+</svg>`,
+
+// CAP теорема
+cap: `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="12">
+  <rect width="400" height="300" rx="8" fill="#0d0d18"/>
+  <!-- Triangle -->
+  <polygon points="200,30 40,255 360,255" fill="none" stroke="#ffffff15" stroke-width="1.5"/>
+  <!-- circles at vertices -->
+  <circle cx="200" cy="38" r="34" fill="#ffd93d22" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="200" y="34" fill="#ffd93d" text-anchor="middle" font-weight="700">C</text>
+  <text x="200" y="50" fill="#ffd93d" text-anchor="middle">Consistency</text>
+
+  <circle cx="48" cy="248" r="34" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="48" y="243" fill="#4cc9f0" text-anchor="middle" font-weight="700">A</text>
+  <text x="48" y="259" fill="#4cc9f0" text-anchor="middle">Availability</text>
+
+  <circle cx="352" cy="248" r="34" fill="#c77dff22" stroke="#c77dff" stroke-width="1.5"/>
+  <text x="352" y="243" fill="#c77dff" text-anchor="middle" font-weight="700">P</text>
+  <text x="352" y="259" fill="#c77dff" text-anchor="middle">Partition</text>
+
+  <!-- edges labels -->
+  <text x="106" y="148" fill="#ffd93d" text-anchor="middle" font-size="10" transform="rotate(-60,106,148)">CA: PostgreSQL</text>
+  <text x="294" y="148" fill="#26de81" text-anchor="middle" font-size="10" transform="rotate(60,294,148)">CP: MongoDB</text>
+  <text x="200" y="272" fill="#fd79a8" text-anchor="middle" font-size="10">AP: Cassandra · DynamoDB</text>
+  <!-- center note -->
+  <text x="200" y="168" fill="#ffffff44" text-anchor="middle" font-size="10">выбери 2 из 3</text>
+</svg>`,
+
+// Микросервисы vs монолит
+microVsMono: `<svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="200" rx="8" fill="#0d0d18"/>
+  <!-- Monolith -->
+  <text x="130" y="22" fill="#888" text-anchor="middle" font-size="12" font-weight="700">Монолит</text>
+  <rect x="30" y="32" width="200" height="130" rx="6" fill="#ffd93d18" stroke="#ffd93d" stroke-width="1.5"/>
+  <rect x="50" y="48" width="160" height="24" rx="4" fill="#ffd93d33"/><text x="130" y="64" fill="#ffd93d" text-anchor="middle">UI Layer</text>
+  <rect x="50" y="80" width="160" height="24" rx="4" fill="#ffd93d33"/><text x="130" y="96" fill="#ffd93d" text-anchor="middle">Business Logic</text>
+  <rect x="50" y="112" width="160" height="24" rx="4" fill="#ffd93d33"/><text x="130" y="128" fill="#ffd93d" text-anchor="middle">Data Layer</text>
+  <rect x="70" y="143" width="120" height="14" rx="3" fill="#ffd93d55"/><text x="130" y="153" fill="#0d0d18" text-anchor="middle" font-size="10">Shared DB</text>
+  <!-- Microservices -->
+  <text x="415" y="22" fill="#888" text-anchor="middle" font-size="12" font-weight="700">Микросервисы</text>
+  <rect x="290" y="35" width="80" height="50" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/><text x="330" y="57" fill="#00d4aa" text-anchor="middle">Auth</text><text x="330" y="72" fill="#00d4aa" text-anchor="middle">Svc</text>
+  <rect x="390" y="35" width="80" height="50" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="430" y="57" fill="#4cc9f0" text-anchor="middle">Order</text><text x="430" y="72" fill="#4cc9f0" text-anchor="middle">Svc</text>
+  <rect x="490" y="35" width="60" height="50" rx="4" fill="#c77dff22" stroke="#c77dff" stroke-width="1.5"/><text x="520" y="57" fill="#c77dff" text-anchor="middle">Pay</text><text x="520" y="72" fill="#c77dff" text-anchor="middle">Svc</text>
+  <rect x="330" y="110" width="80" height="50" rx="4" fill="#fd79a822" stroke="#fd79a8" stroke-width="1.5"/><text x="370" y="132" fill="#fd79a8" text-anchor="middle">Notify</text><text x="370" y="147" fill="#fd79a8" text-anchor="middle">Svc</text>
+  <rect x="430" y="110" width="80" height="50" rx="4" fill="#26de8122" stroke="#26de81" stroke-width="1.5"/><text x="470" y="132" fill="#26de81" text-anchor="middle">Catalog</text><text x="470" y="147" fill="#26de81" text-anchor="middle">Svc</text>
+  <!-- API GW -->
+  <rect x="350" y="172" width="100" height="22" rx="4" fill="#ffffff22"/><text x="400" y="186" fill="#fff" text-anchor="middle" font-size="10">API Gateway</text>
+  <!-- arrows -->
+  <line x1="330" y1="85" x2="330" y2="108" stroke="#ffffff33" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="400" y1="85" x2="390" y2="108" stroke="#ffffff33" stroke-width="1"/>
+  <line x1="370" y1="160" x2="385" y2="170" stroke="#ffffff33" stroke-width="1"/>
+  <line x1="470" y1="160" x2="415" y2="170" stroke="#ffffff33" stroke-width="1"/>
+</svg>`,
+
+// API Gateway схема
+apiGateway: `<svg viewBox="0 0 520 240" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="520" height="240" rx="8" fill="#0d0d18"/>
+  <!-- Clients -->
+  <rect x="10" y="60" width="70" height="30" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="45" y="80" fill="#4cc9f0" text-anchor="middle">Web</text>
+  <rect x="10" y="105" width="70" height="30" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="45" y="125" fill="#4cc9f0" text-anchor="middle">Mobile</text>
+  <rect x="10" y="150" width="70" height="30" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="45" y="170" fill="#4cc9f0" text-anchor="middle">3rd party</text>
+  <!-- arrows to GW -->
+  <line x1="80" y1="75" x2="160" y2="100" stroke="#4cc9f066" stroke-width="1.5"/>
+  <line x1="80" y1="120" x2="160" y2="118" stroke="#4cc9f066" stroke-width="1.5"/>
+  <line x1="80" y1="165" x2="160" y2="135" stroke="#4cc9f066" stroke-width="1.5"/>
+  <!-- Gateway box -->
+  <rect x="160" y="60" width="130" height="120" rx="6" fill="#ffd93d22" stroke="#ffd93d" stroke-width="2"/>
+  <text x="225" y="82" fill="#ffd93d" text-anchor="middle" font-weight="700">API Gateway</text>
+  <text x="225" y="101" fill="#888" text-anchor="middle">Auth / JWT</text>
+  <text x="225" y="117" fill="#888" text-anchor="middle">Rate Limiting</text>
+  <text x="225" y="133" fill="#888" text-anchor="middle">Routing</text>
+  <text x="225" y="149" fill="#888" text-anchor="middle">SSL Terminate</text>
+  <text x="225" y="165" fill="#888" text-anchor="middle">Logging</text>
+  <!-- arrows to services -->
+  <line x1="290" y1="90" x2="360" y2="72" stroke="#ffd93d66" stroke-width="1.5"/>
+  <line x1="290" y1="118" x2="360" y2="118" stroke="#ffd93d66" stroke-width="1.5"/>
+  <line x1="290" y1="145" x2="360" y2="162" stroke="#ffd93d66" stroke-width="1.5"/>
+  <!-- Services -->
+  <rect x="360" y="55" width="90" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/><text x="405" y="74" fill="#00d4aa" text-anchor="middle">User Svc</text>
+  <rect x="360" y="103" width="90" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/><text x="405" y="122" fill="#00d4aa" text-anchor="middle">Order Svc</text>
+  <rect x="360" y="150" width="90" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/><text x="405" y="169" fill="#00d4aa" text-anchor="middle">Pay Svc</text>
+  <!-- title -->
+  <text x="260" y="215" fill="#666" text-anchor="middle" font-size="10">Клиент → Gateway (единая точка входа) → Микросервисы</text>
+</svg>`,
+
+// Saga паттерн — orchestration
+saga: `<svg viewBox="0 0 560 195" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="195" rx="8" fill="#0d0d18"/>
+  <text x="280" y="20" fill="#ffd93d" text-anchor="middle" font-weight="700" font-size="12">Saga Orchestration</text>
+  <!-- Orchestrator -->
+  <rect x="215" y="30" width="130" height="35" rx="5" fill="#ffd93d33" stroke="#ffd93d" stroke-width="2"/>
+  <text x="280" y="52" fill="#ffd93d" text-anchor="middle" font-weight="700">Orchestrator</text>
+  <!-- Services -->
+  <rect x="20" y="120" width="100" height="35" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="70" y="142" fill="#00d4aa" text-anchor="middle">Order Svc</text>
+  <rect x="160" y="120" width="100" height="35" rx="5" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="210" y="142" fill="#4cc9f0" text-anchor="middle">Payment Svc</text>
+  <rect x="300" y="120" width="100" height="35" rx="5" fill="#c77dff22" stroke="#c77dff" stroke-width="1.5"/>
+  <text x="350" y="142" fill="#c77dff" text-anchor="middle">Inventory Svc</text>
+  <rect x="440" y="120" width="100" height="35" rx="5" fill="#fd79a822" stroke="#fd79a8" stroke-width="1.5"/>
+  <text x="490" y="142" fill="#fd79a8" text-anchor="middle">Notify Svc</text>
+  <!-- arrows down -->
+  <line x1="248" y1="65" x2="70" y2="120" stroke="#ffd93d66" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <line x1="265" y1="65" x2="210" y2="120" stroke="#ffd93d66" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <line x1="295" y1="65" x2="350" y2="120" stroke="#ffd93d66" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <line x1="312" y1="65" x2="490" y2="120" stroke="#ffd93d66" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <!-- step numbers -->
+  <text x="140" y="95" fill="#26de81" font-size="10">①</text>
+  <text x="225" y="95" fill="#26de81" font-size="10">②</text>
+  <text x="315" y="95" fill="#26de81" font-size="10">③</text>
+  <text x="400" y="95" fill="#26de81" font-size="10">④</text>
+  <!-- compensate note -->
+  <text x="280" y="182" fill="#ff6b6b" text-anchor="middle" font-size="10">При ошибке → компенсирующие транзакции в обратном порядке</text>
+</svg>`,
+
+// CQRS схема
+cqrs: `<svg viewBox="0 0 520 200" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="520" height="200" rx="8" fill="#0d0d18"/>
+  <text x="260" y="20" fill="#ffd93d" text-anchor="middle" font-weight="700" font-size="12">CQRS Pattern</text>
+  <!-- Client -->
+  <rect x="215" y="30" width="90" height="30" rx="4" fill="#ffffff15" stroke="#ffffff44" stroke-width="1.5"/>
+  <text x="260" y="49" fill="#ccc" text-anchor="middle">Client</text>
+  <!-- Command side -->
+  <line x1="230" y1="60" x2="130" y2="90" stroke="#ff6b6b88" stroke-width="1.5" marker-end="url(#arrR)"/>
+  <text x="155" y="82" fill="#ff6b6b" font-size="10">Command</text>
+  <rect x="40" y="92" width="110" height="30" rx="4" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="95" y="111" fill="#ff6b6b" text-anchor="middle">Command Handler</text>
+  <rect x="40" y="143" width="110" height="30" rx="4" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1"/>
+  <text x="95" y="162" fill="#ff6b6b" text-anchor="middle">Write DB</text>
+  <line x1="95" y1="122" x2="95" y2="143" stroke="#ff6b6b88" stroke-width="1.5"/>
+  <!-- Query side -->
+  <line x1="290" y1="60" x2="390" y2="90" stroke="#00d4aa88" stroke-width="1.5" marker-end="url(#arrG)"/>
+  <text x="360" y="82" fill="#00d4aa" font-size="10">Query</text>
+  <rect x="370" y="92" width="110" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="425" y="111" fill="#00d4aa" text-anchor="middle">Query Handler</text>
+  <rect x="370" y="143" width="110" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1"/>
+  <text x="425" y="162" fill="#00d4aa" text-anchor="middle">Read DB</text>
+  <line x1="425" y1="122" x2="425" y2="143" stroke="#00d4aa88" stroke-width="1.5"/>
+  <!-- sync arrow -->
+  <line x1="150" y1="163" x2="370" y2="163" stroke="#ffffff22" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="260" y="175" fill="#888" text-anchor="middle" font-size="10">Events sync (eventual consistency)</text>
+  <defs><marker id="arrR" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff6b6b"/></marker><marker id="arrG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#00d4aa"/></marker></defs>
+</svg>`,
+
+// OAuth 2.0 Authorization Code flow
+oauth: `<svg viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="260" rx="8" fill="#0d0d18"/>
+  <!-- Участники -->
+  <rect x="20" y="20" width="80" height="28" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="60" y="38" fill="#4cc9f0" text-anchor="middle">Browser</text>
+  <rect x="220" y="20" width="120" height="28" rx="4" fill="#ffd93d22" stroke="#ffd93d" stroke-width="1.5"/><text x="280" y="38" fill="#ffd93d" text-anchor="middle">Auth Server</text>
+  <rect x="450" y="20" width="90" height="28" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/><text x="495" y="38" fill="#00d4aa" text-anchor="middle">Resource</text>
+  <!-- lifelines -->
+  <line x1="60" y1="48" x2="60" y2="250" stroke="#4cc9f033" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="280" y1="48" x2="280" y2="250" stroke="#ffd93d33" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="495" y1="48" x2="495" y2="250" stroke="#00d4aa33" stroke-width="1" stroke-dasharray="4,3"/>
+  <!-- steps -->
+  <line x1="60" y1="75" x2="270" y2="75" stroke="#4cc9f0" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text x="165" y="70" fill="#888" text-anchor="middle" font-size="10">① Login redirect + scope</text>
+  <line x1="270" y1="100" x2="70" y2="100" stroke="#ffd93d" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a2)"/>
+  <text x="165" y="95" fill="#888" text-anchor="middle" font-size="10">② Login page</text>
+  <line x1="60" y1="125" x2="270" y2="125" stroke="#4cc9f0" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text x="165" y="120" fill="#888" text-anchor="middle" font-size="10">③ User credentials</text>
+  <line x1="270" y1="150" x2="70" y2="150" stroke="#ffd93d" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a2)"/>
+  <text x="165" y="145" fill="#888" text-anchor="middle" font-size="10">④ Auth Code (redirect)</text>
+  <line x1="60" y1="175" x2="270" y2="175" stroke="#4cc9f0" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text x="165" y="170" fill="#888" text-anchor="middle" font-size="10">⑤ Code + client_secret</text>
+  <line x1="270" y1="200" x2="70" y2="200" stroke="#ffd93d" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a2)"/>
+  <text x="165" y="195" fill="#888" text-anchor="middle" font-size="10">⑥ Access Token + Refresh</text>
+  <line x1="60" y1="225" x2="485" y2="225" stroke="#26de81" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="280" y="220" fill="#888" text-anchor="middle" font-size="10">⑦ API call + Bearer Token</text>
+  <defs>
+    <marker id="a1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4cc9f0"/></marker>
+    <marker id="a2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd93d"/></marker>
+    <marker id="a3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#26de81"/></marker>
+  </defs>
+</svg>`,
+
+// Kafka архитектура
+kafka: `<svg viewBox="0 0 560 220" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="220" rx="8" fill="#0d0d18"/>
+  <!-- Producer -->
+  <rect x="10" y="85" width="80" height="50" rx="5" fill="#ffd32a22" stroke="#ffd32a" stroke-width="1.5"/><text x="50" y="108" fill="#ffd32a" text-anchor="middle" font-weight="700">Producer</text><text x="50" y="124" fill="#888" text-anchor="middle">App</text>
+  <line x1="90" y1="110" x2="140" y2="110" stroke="#ffd32a88" stroke-width="2" marker-end="url(#ak)"/>
+  <!-- Broker / Topic -->
+  <rect x="140" y="20" width="280" height="180" rx="6" fill="#ffffff08" stroke="#ffffff22" stroke-width="1"/>
+  <text x="280" y="40" fill="#888" text-anchor="middle" font-size="10">Kafka Broker</text>
+  <text x="280" y="58" fill="#ffd32a" text-anchor="middle" font-weight="700">Topic: orders</text>
+  <!-- Partitions -->
+  <rect x="155" y="68" width="250" height="38" rx="4" fill="#ffd32a15" stroke="#ffd32a66" stroke-width="1"/>
+  <text x="180" y="83" fill="#888" font-size="10">Partition 0</text>
+  <rect x="172" y="72" width="30" height="28" rx="2" fill="#ffd32a33"/><text x="187" y="90" fill="#ffd32a" text-anchor="middle" font-size="9">msg0</text>
+  <rect x="206" y="72" width="30" height="28" rx="2" fill="#ffd32a33"/><text x="221" y="90" fill="#ffd32a" text-anchor="middle" font-size="9">msg1</text>
+  <rect x="240" y="72" width="30" height="28" rx="2" fill="#ffd32a33"/><text x="255" y="90" fill="#ffd32a" text-anchor="middle" font-size="9">msg2</text>
+  <text x="310" y="90" fill="#888" font-size="9">offset→</text>
+  <rect x="155" y="114" width="250" height="38" rx="4" fill="#ffd32a15" stroke="#ffd32a66" stroke-width="1"/>
+  <text x="180" y="129" fill="#888" font-size="10">Partition 1</text>
+  <rect x="172" y="118" width="30" height="28" rx="2" fill="#ffd32a22"/><text x="187" y="136" fill="#ffd32a" text-anchor="middle" font-size="9">msg0</text>
+  <rect x="206" y="118" width="30" height="28" rx="2" fill="#ffd32a22"/><text x="221" y="136" fill="#ffd32a" text-anchor="middle" font-size="9">msg1</text>
+  <rect x="155" y="160" width="250" height="30" rx="4" fill="#ffd32a08" stroke="#ffd32a33" stroke-width="1"/>
+  <text x="280" y="179" fill="#888" text-anchor="middle" font-size="10">Partition 2 …</text>
+  <!-- Consumers -->
+  <line x1="420" y1="88" x2="460" y2="78" stroke="#26de8188" stroke-width="1.5" marker-end="url(#ac)"/>
+  <line x1="420" y1="133" x2="460" y2="123" stroke="#26de8188" stroke-width="1.5" marker-end="url(#ac)"/>
+  <rect x="460" y="55" width="90" height="36" rx="4" fill="#26de8122" stroke="#26de81" stroke-width="1.5"/><text x="505" y="73" fill="#26de81" text-anchor="middle">Consumer</text><text x="505" y="86" fill="#26de81" text-anchor="middle">Group A</text>
+  <rect x="460" y="108" width="90" height="36" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="505" y="126" fill="#4cc9f0" text-anchor="middle">Consumer</text><text x="505" y="139" fill="#4cc9f0" text-anchor="middle">Group B</text>
+  <defs>
+    <marker id="ak" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd32a"/></marker>
+    <marker id="ac" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#26de81"/></marker>
+  </defs>
+</svg>`,
+
+// Circuit Breaker состояния
+circuitBreaker: `<svg viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="12">
+  <rect width="500" height="180" rx="8" fill="#0d0d18"/>
+  <!-- States -->
+  <circle cx="90" cy="90" r="55" fill="#26de8122" stroke="#26de81" stroke-width="2"/>
+  <text x="90" y="85" fill="#26de81" text-anchor="middle" font-weight="700">CLOSED</text>
+  <text x="90" y="102" fill="#888" text-anchor="middle" font-size="10">запросы</text>
+  <text x="90" y="115" fill="#888" text-anchor="middle" font-size="10">проходят</text>
+
+  <circle cx="410" cy="90" r="55" fill="#ff475722" stroke="#ff4757" stroke-width="2"/>
+  <text x="410" y="85" fill="#ff4757" text-anchor="middle" font-weight="700">OPEN</text>
+  <text x="410" y="102" fill="#888" text-anchor="middle" font-size="10">запросы</text>
+  <text x="410" y="115" fill="#888" text-anchor="middle" font-size="10">блокируются</text>
+
+  <ellipse cx="250" cy="148" rx="55" ry="26" fill="#ffd93d22" stroke="#ffd93d" stroke-width="2"/>
+  <text x="250" y="145" fill="#ffd93d" text-anchor="middle" font-weight="700">HALF-OPEN</text>
+  <text x="250" y="160" fill="#888" text-anchor="middle" font-size="9">probe-запрос</text>
+
+  <!-- Transitions -->
+  <path d="M 145,70 Q 250,20 355,70" fill="none" stroke="#ff4757" stroke-width="1.5" marker-end="url(#ao)"/>
+  <text x="250" y="38" fill="#ff4757" text-anchor="middle" font-size="10">N ошибок подряд</text>
+
+  <path d="M 360,120 Q 305,148 305,148" fill="none" stroke="#ffd93d" stroke-width="1.5" marker-end="url(#ay)"/>
+  <text x="385" y="148" fill="#ffd93d" font-size="10">timeout</text>
+
+  <path d="M 195,148 Q 140,130 140,110" fill="none" stroke="#26de81" stroke-width="1.5" marker-end="url(#ag)"/>
+  <text x="135" y="140" fill="#26de81" font-size="9" text-anchor="middle">успех</text>
+
+  <path d="M 200,135 Q 310,80 360,75" fill="none" stroke="#ff4757" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#ao)"/>
+  <text x="295" y="103" fill="#ff4757" font-size="9">ошибка</text>
+  <defs>
+    <marker id="ao" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ff4757"/></marker>
+    <marker id="ay" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd93d"/></marker>
+    <marker id="ag" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#26de81"/></marker>
+  </defs>
+</svg>`,
+
+// BPMN элементы
+bpmn: `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="210" rx="8" fill="#0d0d18"/>
+  <text x="280" y="20" fill="#ff9f43" text-anchor="middle" font-weight="700" font-size="12">Элементы BPMN 2.0</text>
+  <!-- Events -->
+  <text x="70" y="45" fill="#888" text-anchor="middle" font-size="10">Events</text>
+  <circle cx="30" cy="70" r="14" fill="none" stroke="#26de81" stroke-width="2"/><text x="30" y="92" fill="#888" text-anchor="middle" font-size="9">Start</text>
+  <circle cx="70" cy="70" r="14" fill="none" stroke="#ffd93d" stroke-width="2"/><circle cx="70" cy="70" r="10" fill="none" stroke="#ffd93d" stroke-width="1.5"/><text x="70" y="92" fill="#888" text-anchor="middle" font-size="9">Inter</text>
+  <circle cx="110" cy="70" r="14" fill="none" stroke="#ff4757" stroke-width="4"/><text x="110" y="92" fill="#888" text-anchor="middle" font-size="9">End</text>
+  <!-- Tasks -->
+  <text x="230" y="45" fill="#888" text-anchor="middle" font-size="10">Tasks</text>
+  <rect x="175" y="55" width="110" height="30" rx="5" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="230" y="74" fill="#4cc9f0" text-anchor="middle">User Task</text>
+  <rect x="175" y="95" width="110" height="30" rx="5" fill="#c77dff22" stroke="#c77dff" stroke-width="1.5"/>
+  <text x="200" y="105" fill="#c77dff" font-size="9">⚙</text><text x="230" y="114" fill="#c77dff" text-anchor="middle">Service Task</text>
+  <!-- Gateways -->
+  <text x="390" y="45" fill="#888" text-anchor="middle" font-size="10">Gateways</text>
+  <polygon points="330,70 348,55 366,70 348,85" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="2"/><text x="348" y="73" fill="#ff6b6b" text-anchor="middle" font-size="12">✕</text><text x="348" y="98" fill="#888" text-anchor="middle" font-size="9">XOR</text>
+  <polygon points="390,70 408,55 426,70 408,85" fill="#26de8122" stroke="#26de81" stroke-width="2"/><text x="408" y="73" fill="#26de81" text-anchor="middle" font-size="12">+</text><text x="408" y="98" fill="#888" text-anchor="middle" font-size="9">AND</text>
+  <polygon points="450,70 468,55 486,70 468,85" fill="#ffd93d22" stroke="#ffd93d" stroke-width="2"/><circle cx="468" cy="70" r="6" fill="none" stroke="#ffd93d" stroke-width="1.5"/><text x="468" y="98" fill="#888" text-anchor="middle" font-size="9">OR</text>
+  <!-- Pool / Lane example -->
+  <text x="280" y="125" fill="#888" text-anchor="middle" font-size="10">Pool / Lane</text>
+  <rect x="10" y="132" width="540" height="65" rx="4" fill="none" stroke="#ffffff33" stroke-width="1.5"/>
+  <text x="22" y="180" fill="#888" font-size="9" transform="rotate(-90,22,167)">Pool</text>
+  <line x1="35" y1="132" x2="35" y2="197" stroke="#ffffff22" stroke-width="1"/>
+  <rect x="38" y="135" width="508" height="28" rx="2" fill="#4cc9f010"/><text x="55" y="153" fill="#4cc9f0" font-size="10">Lane 1: Менеджер</text>
+  <rect x="38" y="165" width="508" height="28" rx="2" fill="#c77dff10"/><text x="55" y="183" fill="#c77dff" font-size="10">Lane 2: Система</text>
+</svg>`,
+
+// Sequence диаграмма
+sequence: `<svg viewBox="0 0 520 255" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="520" height="255" rx="8" fill="#0d0d18"/>
+  <text x="260" y="18" fill="#ff9f43" text-anchor="middle" font-weight="700" font-size="12">Sequence Diagram (alt фрейм)</text>
+  <!-- participants -->
+  <rect x="30" y="25" width="80" height="26" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="70" y="41" fill="#4cc9f0" text-anchor="middle">Client</text>
+  <rect x="200" y="25" width="80" height="26" rx="4" fill="#ffd93d22" stroke="#ffd93d" stroke-width="1.5"/><text x="240" y="41" fill="#ffd93d" text-anchor="middle">API GW</text>
+  <rect x="380" y="25" width="80" height="26" rx="4" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/><text x="420" y="41" fill="#00d4aa" text-anchor="middle">Service</text>
+  <!-- lifelines -->
+  <line x1="70" y1="51" x2="70" y2="245" stroke="#4cc9f033" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="240" y1="51" x2="240" y2="245" stroke="#ffd93d33" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="420" y1="51" x2="420" y2="245" stroke="#00d4aa33" stroke-width="1" stroke-dasharray="4,3"/>
+  <!-- messages -->
+  <line x1="70" y1="75" x2="232" y2="75" stroke="#4cc9f0" stroke-width="1.5" marker-end="url(#sq1)"/>
+  <text x="151" y="70" fill="#888" text-anchor="middle" font-size="10">POST /orders</text>
+  <line x1="240" y1="90" x2="412" y2="90" stroke="#ffd93d" stroke-width="1.5" marker-end="url(#sq2)"/>
+  <text x="326" y="85" fill="#888" text-anchor="middle" font-size="10">createOrder()</text>
+  <!-- alt frame -->
+  <rect x="280" y="100" width="180" height="100" rx="4" fill="none" stroke="#ffffff33" stroke-width="1.5"/>
+  <rect x="280" y="100" width="50" height="16" rx="2" fill="#ffffff22"/>
+  <text x="305" y="112" fill="#ccc" text-anchor="middle" font-size="10">alt</text>
+  <text x="370" y="125" fill="#26de81" text-anchor="middle" font-size="10">[stock &gt; 0]</text>
+  <line x1="412" y1="135" x2="248" y2="135" stroke="#00d4aa" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sq3)"/>
+  <text x="330" y="130" fill="#888" text-anchor="middle" font-size="10">201 Created</text>
+  <line x1="280" y1="150" x2="460" y2="150" stroke="#ffffff22" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="370" y="168" fill="#ff6b6b" text-anchor="middle" font-size="10">[stock == 0]</text>
+  <line x1="412" y1="180" x2="248" y2="180" stroke="#ff6b6b" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sq4)"/>
+  <text x="330" y="175" fill="#888" text-anchor="middle" font-size="10">409 Conflict</text>
+  <!-- final -->
+  <line x1="240" y1="210" x2="78" y2="210" stroke="#ffd93d" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sq5)"/>
+  <text x="159" y="205" fill="#888" text-anchor="middle" font-size="10">response</text>
+  <defs>
+    <marker id="sq1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4cc9f0"/></marker>
+    <marker id="sq2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd93d"/></marker>
+    <marker id="sq3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#00d4aa"/></marker>
+    <marker id="sq4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ff6b6b"/></marker>
+    <marker id="sq5" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd93d"/></marker>
+  </defs>
+</svg>`,
+
+// C4 Model уровни
+c4: `<svg viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="520" height="220" rx="8" fill="#0d0d18"/>
+  <text x="260" y="18" fill="#ff9f43" text-anchor="middle" font-weight="700" font-size="12">C4 Model — уровни абстракции</text>
+  <!-- Level 1: Context -->
+  <rect x="10" y="30" width="115" height="175" rx="6" fill="#4cc9f015" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="67" y="50" fill="#4cc9f0" text-anchor="middle" font-weight="700">L1</text>
+  <text x="67" y="65" fill="#4cc9f0" text-anchor="middle">Context</text>
+  <circle cx="67" cy="110" r="24" fill="#4cc9f033" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="67" y="114" fill="#4cc9f0" text-anchor="middle" font-size="10">System</text>
+  <text x="67" y="155" fill="#888" text-anchor="middle" font-size="9">Система + внешние</text>
+  <text x="67" y="169" fill="#888" text-anchor="middle" font-size="9">пользователи</text>
+  <!-- Level 2: Container -->
+  <rect x="140" y="30" width="115" height="175" rx="6" fill="#ffd93d15" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="197" y="50" fill="#ffd93d" text-anchor="middle" font-weight="700">L2</text>
+  <text x="197" y="65" fill="#ffd93d" text-anchor="middle">Container</text>
+  <rect x="155" y="78" width="85" height="22" rx="3" fill="#ffd93d33"/><text x="197" y="93" fill="#ffd93d" text-anchor="middle" font-size="9">SPA / Mobile</text>
+  <rect x="155" y="106" width="85" height="22" rx="3" fill="#ffd93d33"/><text x="197" y="121" fill="#ffd93d" text-anchor="middle" font-size="9">API Service</text>
+  <rect x="155" y="134" width="85" height="22" rx="3" fill="#ffd93d33"/><text x="197" y="149" fill="#ffd93d" text-anchor="middle" font-size="9">Database</text>
+  <text x="197" y="188" fill="#888" text-anchor="middle" font-size="9">Приложения и БД</text>
+  <!-- Level 3: Component -->
+  <rect x="270" y="30" width="115" height="175" rx="6" fill="#c77dff15" stroke="#c77dff" stroke-width="1.5"/>
+  <text x="327" y="50" fill="#c77dff" text-anchor="middle" font-weight="700">L3</text>
+  <text x="327" y="65" fill="#c77dff" text-anchor="middle">Component</text>
+  <rect x="285" y="78" width="85" height="18" rx="3" fill="#c77dff22"/><text x="327" y="91" fill="#c77dff" text-anchor="middle" font-size="9">Auth Module</text>
+  <rect x="285" y="100" width="85" height="18" rx="3" fill="#c77dff22"/><text x="327" y="113" fill="#c77dff" text-anchor="middle" font-size="9">Order Module</text>
+  <rect x="285" y="122" width="85" height="18" rx="3" fill="#c77dff22"/><text x="327" y="135" fill="#c77dff" text-anchor="middle" font-size="9">Payment Module</text>
+  <rect x="285" y="144" width="85" height="18" rx="3" fill="#c77dff22"/><text x="327" y="157" fill="#c77dff" text-anchor="middle" font-size="9">Notify Module</text>
+  <text x="327" y="188" fill="#888" text-anchor="middle" font-size="9">Модули контейнера</text>
+  <!-- Level 4: Code -->
+  <rect x="400" y="30" width="110" height="175" rx="6" fill="#26de8115" stroke="#26de81" stroke-width="1.5"/>
+  <text x="455" y="50" fill="#26de81" text-anchor="middle" font-weight="700">L4</text>
+  <text x="455" y="65" fill="#26de81" text-anchor="middle">Code</text>
+  <text x="455" y="95" fill="#888" text-anchor="middle" font-size="9">Class</text>
+  <rect x="415" y="100" width="80" height="60" rx="3" fill="#26de8118" stroke="#26de8166"/>
+  <text x="455" y="118" fill="#26de81" text-anchor="middle" font-size="9">+field: type</text>
+  <text x="455" y="133" fill="#26de81" text-anchor="middle" font-size="9">──────</text>
+  <text x="455" y="148" fill="#26de81" text-anchor="middle" font-size="9">+method()</text>
+  <text x="455" y="188" fill="#888" text-anchor="middle" font-size="9">UML классы</text>
+</svg>`,
+
+// JWT структура
+jwt: `<svg viewBox="0 0 540 175" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="540" height="175" rx="8" fill="#0d0d18"/>
+  <text x="270" y="20" fill="#ff4757" text-anchor="middle" font-weight="700" font-size="12">JWT: header.payload.signature</text>
+  <!-- Header -->
+  <rect x="10" y="32" width="155" height="70" rx="5" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="87" y="50" fill="#4cc9f0" text-anchor="middle" font-weight="700">Header</text>
+  <text x="87" y="66" fill="#888" text-anchor="middle">alg: HS256</text>
+  <text x="87" y="82" fill="#888" text-anchor="middle">typ: JWT</text>
+  <text x="87" y="118" fill="#4cc9f066" text-anchor="middle" font-size="9">Base64Url encoded</text>
+  <!-- dot -->
+  <text x="173" y="72" fill="#888" text-anchor="middle" font-size="20" font-weight="700">.</text>
+  <!-- Payload -->
+  <rect x="183" y="32" width="175" height="70" rx="5" fill="#ffd93d22" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="270" y="50" fill="#ffd93d" text-anchor="middle" font-weight="700">Payload (Claims)</text>
+  <text x="270" y="66" fill="#888" text-anchor="middle">sub, iat, exp</text>
+  <text x="270" y="82" fill="#888" text-anchor="middle">roles, email</text>
+  <text x="270" y="118" fill="#ffd93d66" text-anchor="middle" font-size="9">⚠ декодируется без ключа!</text>
+  <!-- dot -->
+  <text x="366" y="72" fill="#888" text-anchor="middle" font-size="20" font-weight="700">.</text>
+  <!-- Signature -->
+  <rect x="375" y="32" width="155" height="70" rx="5" fill="#26de8122" stroke="#26de81" stroke-width="1.5"/>
+  <text x="452" y="50" fill="#26de81" text-anchor="middle" font-weight="700">Signature</text>
+  <text x="452" y="66" fill="#888" text-anchor="middle">HMAC-SHA256(</text>
+  <text x="452" y="82" fill="#888" text-anchor="middle">b64h + b64p, secret)</text>
+  <text x="452" y="118" fill="#26de8166" text-anchor="middle" font-size="9">проверяет подлинность</text>
+  <!-- flow -->
+  <text x="270" y="145" fill="#888" text-anchor="middle" font-size="10">Access Token: короткий (15 мин) · Refresh Token: долгий (7д) · хранить в httpOnly cookie</text>
+</svg>`,
+
+// Шардирование vs репликация
+shardVsRepl: `<svg viewBox="0 0 540 200" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="540" height="200" rx="8" fill="#0d0d18"/>
+  <!-- Replication -->
+  <text x="120" y="20" fill="#888" text-anchor="middle" font-size="12" font-weight="700">Репликация</text>
+  <rect x="60" y="30" width="120" height="50" rx="5" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="2"/>
+  <text x="120" y="52" fill="#4cc9f0" text-anchor="middle" font-weight="700">Master DB</text>
+  <text x="120" y="67" fill="#888" text-anchor="middle">все данные</text>
+  <line x1="60" y1="85" x2="30" y2="115" stroke="#4cc9f066" stroke-width="1.5" marker-end="url(#rr)"/>
+  <line x1="120" y1="80" x2="120" y2="115" stroke="#4cc9f066" stroke-width="1.5" marker-end="url(#rr)"/>
+  <line x1="180" y1="85" x2="210" y2="115" stroke="#4cc9f066" stroke-width="1.5" marker-end="url(#rr)"/>
+  <rect x="10" y="115" width="75" height="40" rx="4" fill="#4cc9f015" stroke="#4cc9f066"/><text x="47" y="130" fill="#888" text-anchor="middle" font-size="9">Replica</text><text x="47" y="143" fill="#888" text-anchor="middle" font-size="9">все данные</text>
+  <rect x="82" y="115" width="75" height="40" rx="4" fill="#4cc9f015" stroke="#4cc9f066"/><text x="119" y="130" fill="#888" text-anchor="middle" font-size="9">Replica</text><text x="119" y="143" fill="#888" text-anchor="middle" font-size="9">все данные</text>
+  <rect x="172" y="115" width="75" height="40" rx="4" fill="#4cc9f015" stroke="#4cc9f066"/><text x="209" y="130" fill="#888" text-anchor="middle" font-size="9">Replica</text><text x="209" y="143" fill="#888" text-anchor="middle" font-size="9">все данные</text>
+  <text x="120" y="178" fill="#4cc9f0" text-anchor="middle" font-size="10">копирует всё → отказоустойчивость</text>
+  <!-- Sharding -->
+  <text x="400" y="20" fill="#888" text-anchor="middle" font-size="12" font-weight="700">Шардирование</text>
+  <rect x="360" y="30" width="80" height="30" rx="4" fill="#ffffff15" stroke="#ffffff44"/><text x="400" y="49" fill="#ccc" text-anchor="middle">Client</text>
+  <line x1="370" y1="60" x2="320" y2="90" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#rs)"/>
+  <line x1="400" y1="60" x2="400" y2="90" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#rs)"/>
+  <line x1="430" y1="60" x2="480" y2="90" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#rs)"/>
+  <rect x="285" y="92" width="75" height="45" rx="4" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="322" y="110" fill="#ff6b6b" text-anchor="middle" font-size="9">Shard 1</text><text x="322" y="124" fill="#888" text-anchor="middle" font-size="8">ID 0-33%</text>
+  <rect x="362" y="92" width="75" height="45" rx="4" fill="#ffd93d22" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="399" y="110" fill="#ffd93d" text-anchor="middle" font-size="9">Shard 2</text><text x="399" y="124" fill="#888" text-anchor="middle" font-size="8">ID 33-66%</text>
+  <rect x="439" y="92" width="75" height="45" rx="4" fill="#26de8122" stroke="#26de81" stroke-width="1.5"/>
+  <text x="476" y="110" fill="#26de81" text-anchor="middle" font-size="9">Shard 3</text><text x="476" y="124" fill="#888" text-anchor="middle" font-size="8">ID 66-100%</text>
+  <text x="400" y="165" fill="#ff6b6b" text-anchor="middle" font-size="10">делит данные → масштабирование</text>
+  <text x="400" y="180" fill="#888" text-anchor="middle" font-size="9">Стратегии: Hash / Range / Directory</text>
+  <defs>
+    <marker id="rr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4cc9f0"/></marker>
+    <marker id="rs" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffffff88"/></marker>
+  </defs>
+</svg>`,
+
+// Scrum процесс
+scrum: `<svg viewBox="0 0 560 175" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="175" rx="8" fill="#0d0d18"/>
+  <!-- Backlog -->
+  <rect x="10" y="30" width="95" height="110" rx="5" fill="#fd79a822" stroke="#fd79a8" stroke-width="1.5"/>
+  <text x="57" y="50" fill="#fd79a8" text-anchor="middle" font-weight="700">Product</text>
+  <text x="57" y="65" fill="#fd79a8" text-anchor="middle">Backlog</text>
+  <rect x="20" y="73" width="75" height="14" rx="2" fill="#fd79a833"/><text x="57" y="84" fill="#fd79a8" text-anchor="middle" font-size="9">Epic → Story</text>
+  <rect x="20" y="92" width="75" height="14" rx="2" fill="#fd79a822"/><text x="57" y="103" fill="#fd79a8" text-anchor="middle" font-size="9">Story → Task</text>
+  <rect x="20" y="111" width="75" height="14" rx="2" fill="#fd79a811"/><text x="57" y="122" fill="#fd79a8" text-anchor="middle" font-size="9">...</text>
+  <!-- Arrow: Planning -->
+  <line x1="105" y1="85" x2="135" y2="85" stroke="#ffffff44" stroke-width="2" marker-end="url(#sp)"/>
+  <text x="120" y="78" fill="#888" text-anchor="middle" font-size="9">Planning</text>
+  <!-- Sprint Backlog -->
+  <rect x="135" y="40" width="90" height="90" rx="5" fill="#ffd93d22" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="180" y="58" fill="#ffd93d" text-anchor="middle" font-weight="700">Sprint</text>
+  <text x="180" y="73" fill="#ffd93d" text-anchor="middle">Backlog</text>
+  <rect x="143" y="80" width="74" height="12" rx="2" fill="#ffd93d33"/><text x="180" y="90" fill="#888" text-anchor="middle" font-size="9">Task 1</text>
+  <rect x="143" y="96" width="74" height="12" rx="2" fill="#ffd93d22"/><text x="180" y="106" fill="#888" text-anchor="middle" font-size="9">Task 2</text>
+  <rect x="143" y="112" width="74" height="12" rx="2" fill="#ffd93d11"/><text x="180" y="122" fill="#888" text-anchor="middle" font-size="9">Task 3</text>
+  <!-- Sprint cycle -->
+  <rect x="245" y="30" width="190" height="115" rx="6" fill="#26de8115" stroke="#26de81" stroke-width="2"/>
+  <text x="340" y="48" fill="#26de81" text-anchor="middle" font-weight="700">Sprint (1-4 нед)</text>
+  <text x="340" y="67" fill="#888" text-anchor="middle">🌅 Daily Standup</text>
+  <text x="340" y="85" fill="#888" text-anchor="middle">💻 Development</text>
+  <text x="340" y="103" fill="#888" text-anchor="middle">🔍 Testing</text>
+  <text x="340" y="120" fill="#888" text-anchor="middle">📄 Documentation</text>
+  <line x1="225" y1="85" x2="244" y2="85" stroke="#ffffff44" stroke-width="2" marker-end="url(#sp)"/>
+  <!-- Arrows: Review/Retro -->
+  <line x1="435" y1="85" x2="455" y2="85" stroke="#ffffff44" stroke-width="2" marker-end="url(#sp)"/>
+  <rect x="455" y="40" width="95" height="115" rx="5" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="502" y="60" fill="#4cc9f0" text-anchor="middle" font-weight="700">Increment</text>
+  <text x="502" y="80" fill="#888" text-anchor="middle" font-size="10">Review</text>
+  <text x="502" y="96" fill="#888" text-anchor="middle" font-size="10">(демо)</text>
+  <text x="502" y="115" fill="#888" text-anchor="middle" font-size="10">Retro</text>
+  <text x="502" y="131" fill="#888" text-anchor="middle" font-size="10">(улучшения)</text>
+  <!-- Daily cycle arrow -->
+  <text x="280" y="160" fill="#888" text-anchor="middle" font-size="9">Velocity = среднее SP за спринт · DoR → DoD</text>
+  <defs><marker id="sp" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffffff88"/></marker></defs>
+</svg>`,
+
+// REST vs gRPC
+restVsGrpc: `<svg viewBox="0 0 540 175" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="540" height="175" rx="8" fill="#0d0d18"/>
+  <!-- REST -->
+  <rect x="10" y="20" width="240" height="145" rx="6" fill="#00d4aa18" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="130" y="40" fill="#00d4aa" text-anchor="middle" font-weight="700" font-size="12">REST</text>
+  <text x="130" y="58" fill="#888" text-anchor="middle">Протокол: HTTP/1.1 (HTTP/2)</text>
+  <text x="130" y="74" fill="#888" text-anchor="middle">Формат: JSON / XML (текст)</text>
+  <text x="130" y="90" fill="#888" text-anchor="middle">Схема: OpenAPI (опционально)</text>
+  <text x="130" y="106" fill="#888" text-anchor="middle">Streaming: ограниченный</text>
+  <text x="130" y="122" fill="#26de81" text-anchor="middle">✓ Прост в отладке (Postman)</text>
+  <text x="130" y="138" fill="#26de81" text-anchor="middle">✓ Браузер, внешний API</text>
+  <text x="130" y="155" fill="#ff6b6b" text-anchor="middle">✗ Медленнее gRPC</text>
+  <!-- gRPC -->
+  <rect x="290" y="20" width="240" height="145" rx="6" fill="#4cc9f018" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="410" y="40" fill="#4cc9f0" text-anchor="middle" font-weight="700" font-size="12">gRPC</text>
+  <text x="410" y="58" fill="#888" text-anchor="middle">Протокол: HTTP/2 (обязательно)</text>
+  <text x="410" y="74" fill="#888" text-anchor="middle">Формат: Protobuf (бинарный)</text>
+  <text x="410" y="90" fill="#888" text-anchor="middle">Схема: .proto (строгая)</text>
+  <text x="410" y="106" fill="#888" text-anchor="middle">Streaming: unary/server/client/bidi</text>
+  <text x="410" y="122" fill="#26de81" text-anchor="middle">✓ В 5-10x быстрее JSON</text>
+  <text x="410" y="138" fill="#26de81" text-anchor="middle">✓ Межсервисные вызовы</text>
+  <text x="410" y="155" fill="#ff6b6b" text-anchor="middle">✗ Нечитаемый трафик, не браузер</text>
+</svg>`,
+
+// State machine — жизненный цикл заказа
+stateMachine: `<svg viewBox="0 0 560 180" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="180" rx="8" fill="#0d0d18"/>
+  <text x="280" y="18" fill="#c77dff" text-anchor="middle" font-weight="700" font-size="12">State Machine: Жизненный цикл Заказа</text>
+  <!-- States -->
+  <circle cx="35" cy="100" r="10" fill="#26de81" stroke="#26de81" stroke-width="2"/>
+  <rect x="70" y="78" width="80" height="36" rx="18" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="2"/>
+  <text x="110" y="100" fill="#4cc9f0" text-anchor="middle" font-weight="700">Created</text>
+  <rect x="185" y="78" width="80" height="36" rx="18" fill="#ffd93d22" stroke="#ffd93d" stroke-width="2"/>
+  <text x="225" y="100" fill="#ffd93d" text-anchor="middle" font-weight="700">Paid</text>
+  <rect x="300" y="78" width="80" height="36" rx="18" fill="#fd79a822" stroke="#fd79a8" stroke-width="2"/>
+  <text x="340" y="100" fill="#fd79a8" text-anchor="middle" font-weight="700">Shipped</text>
+  <rect x="415" y="78" width="90" height="36" rx="18" fill="#26de8122" stroke="#26de81" stroke-width="2"/>
+  <text x="460" y="100" fill="#26de81" text-anchor="middle" font-weight="700">Delivered</text>
+  <!-- Transitions -->
+  <line x1="45" y1="100" x2="70" y2="100" stroke="#26de81" stroke-width="2" marker-end="url(#sm1)"/>
+  <line x1="150" y1="96" x2="185" y2="96" stroke="#4cc9f0" stroke-width="1.5" marker-end="url(#sm2)"/>
+  <text x="167" y="90" fill="#888" text-anchor="middle" font-size="9">payment</text>
+  <line x1="265" y1="96" x2="300" y2="96" stroke="#ffd93d" stroke-width="1.5" marker-end="url(#sm3)"/>
+  <text x="282" y="90" fill="#888" text-anchor="middle" font-size="9">shipped</text>
+  <line x1="380" y1="96" x2="415" y2="96" stroke="#fd79a8" stroke-width="1.5" marker-end="url(#sm4)"/>
+  <text x="397" y="90" fill="#888" text-anchor="middle" font-size="9">delivered</text>
+  <!-- Cancel transitions (from Created and Paid) -->
+  <path d="M 110,114 Q 110,150 200,155 Q 300,160 390,150 Q 430,145 430,115" fill="none" stroke="#ff4757" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sm5)"/>
+  <rect x="222" y="148" width="95" height="20" rx="10" fill="#ff475722" stroke="#ff4757" stroke-width="1.5"/>
+  <text x="269" y="162" fill="#ff4757" text-anchor="middle" font-weight="700">Cancelled</text>
+  <text x="260" y="175" fill="#888" text-anchor="middle" font-size="9">cancel event → компенсирующие действия (refund)</text>
+  <defs>
+    <marker id="sm1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#26de81"/></marker>
+    <marker id="sm2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4cc9f0"/></marker>
+    <marker id="sm3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd93d"/></marker>
+    <marker id="sm4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#fd79a8"/></marker>
+    <marker id="sm5" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ff4757"/></marker>
+  </defs>
+</svg>`,
+
+// ETL vs ELT
+etl: `<svg viewBox="0 0 540 190" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="540" height="190" rx="8" fill="#0d0d18"/>
+  <!-- ETL -->
+  <text x="125" y="22" fill="#e17055" text-anchor="middle" font-weight="700" font-size="12">ETL</text>
+  <rect x="10" y="35" width="60" height="35" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="40" y="57" fill="#4cc9f0" text-anchor="middle">Extract</text>
+  <line x1="70" y1="52" x2="90" y2="52" stroke="#e1705588" stroke-width="2" marker-end="url(#et)"/>
+  <rect x="90" y="35" width="75" height="35" rx="4" fill="#ffd93d22" stroke="#ffd93d" stroke-width="2"/>
+  <text x="127" y="57" fill="#ffd93d" text-anchor="middle" font-weight="700">Transform</text>
+  <text x="127" y="82" fill="#888" text-anchor="middle" font-size="9">до загрузки!</text>
+  <line x1="165" y1="52" x2="185" y2="52" stroke="#e1705588" stroke-width="2" marker-end="url(#et)"/>
+  <rect x="185" y="35" width="55" height="35" rx="4" fill="#26de8122" stroke="#26de81" stroke-width="1.5"/><text x="212" y="57" fill="#26de81" text-anchor="middle">Load</text>
+  <line x1="240" y1="52" x2="258" y2="52" stroke="#e1705588" stroke-width="2" marker-end="url(#et)"/>
+  <rect x="258" y="35" width="65" height="35" rx="4" fill="#c77dff22" stroke="#c77dff" stroke-width="1.5"/><text x="290" y="57" fill="#c77dff" text-anchor="middle">DWH</text>
+  <text x="155" y="108" fill="#888" text-anchor="middle" font-size="10">Informatica · SSIS · Apache NiFi</text>
+  <text x="155" y="123" fill="#888" text-anchor="middle" font-size="10">Хорошо для: on-premise, строгое качество</text>
+  <!-- ELT -->
+  <text x="420" y="22" fill="#e17055" text-anchor="middle" font-weight="700" font-size="12">ELT</text>
+  <rect x="305" y="35" width="60" height="35" rx="4" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/><text x="335" y="57" fill="#4cc9f0" text-anchor="middle">Extract</text>
+  <line x1="365" y1="52" x2="380" y2="52" stroke="#e1705588" stroke-width="2" marker-end="url(#et)"/>
+  <rect x="380" y="35" width="55" height="35" rx="4" fill="#26de8122" stroke="#26de81" stroke-width="1.5"/><text x="407" y="57" fill="#26de81" text-anchor="middle">Load</text>
+  <line x1="435" y1="52" x2="450" y2="52" stroke="#e1705588" stroke-width="2" marker-end="url(#et)"/>
+  <rect x="450" y="28" width="80" height="50" rx="4" fill="#c77dff22" stroke="#c77dff" stroke-width="2"/>
+  <text x="490" y="50" fill="#c77dff" text-anchor="middle" font-weight="700">DWH/Lake</text>
+  <text x="490" y="66" fill="#ffd93d" text-anchor="middle" font-size="9">Transform</text>
+  <text x="490" y="79" fill="#888" text-anchor="middle" font-size="8">внутри!</text>
+  <text x="420" y="108" fill="#888" text-anchor="middle" font-size="10">DBT · Spark · Airbyte</text>
+  <text x="420" y="123" fill="#888" text-anchor="middle" font-size="10">BigQuery · Redshift · Snowflake</text>
+  <!-- separator -->
+  <line x1="270" y1="25" x2="270" y2="135" stroke="#ffffff15" stroke-width="1" stroke-dasharray="4,3"/>
+  <!-- OLTP / OLAP -->
+  <rect x="10" y="145" width="235" height="35" rx="5" fill="#4cc9f015" stroke="#4cc9f033"/>
+  <text x="117" y="160" fill="#4cc9f0" text-anchor="middle" font-weight="700">OLTP</text>
+  <text x="117" y="174" fill="#888" text-anchor="middle">быстрые транзакции · PostgreSQL · MySQL</text>
+  <rect x="295" y="145" width="235" height="35" rx="5" fill="#c77dff15" stroke="#c77dff33"/>
+  <text x="412" y="160" fill="#c77dff" text-anchor="middle" font-weight="700">OLAP</text>
+  <text x="412" y="174" fill="#888" text-anchor="middle">аналитика · ClickHouse · BigQuery</text>
+  <defs><marker id="et" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#e17055"/></marker></defs>
+</svg>`,
+
+// RabbitMQ exchanges
+rabbitMQ: `<svg viewBox="0 0 560 215" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="560" height="215" rx="8" fill="#0d0d18"/>
+  <text x="280" y="20" fill="#ffd32a" text-anchor="middle" font-weight="700" font-size="12">RabbitMQ: Exchange → Queue → Consumer</text>
+  <!-- Producer -->
+  <rect x="8" y="88" width="75" height="34" rx="4" fill="#ffd32a22" stroke="#ffd32a" stroke-width="1.5"/>
+  <text x="45" y="110" fill="#ffd32a" text-anchor="middle">Producer</text>
+  <line x1="83" y1="105" x2="120" y2="105" stroke="#ffd32a66" stroke-width="2" marker-end="url(#rb1)"/>
+  <!-- Exchange types -->
+  <rect x="120" y="34" width="110" height="140" rx="5" fill="#ffffff08" stroke="#ffffff22"/>
+  <text x="175" y="52" fill="#888" text-anchor="middle" font-size="10">Exchange</text>
+  <rect x="130" y="60" width="90" height="22" rx="3" fill="#ff6b6b22" stroke="#ff6b6b"/>
+  <text x="175" y="75" fill="#ff6b6b" text-anchor="middle">Direct</text>
+  <rect x="130" y="88" width="90" height="22" rx="3" fill="#4cc9f022" stroke="#4cc9f0"/>
+  <text x="175" y="103" fill="#4cc9f0" text-anchor="middle">Topic *.#</text>
+  <rect x="130" y="116" width="90" height="22" rx="3" fill="#26de8122" stroke="#26de81"/>
+  <text x="175" y="131" fill="#26de81" text-anchor="middle">Fanout</text>
+  <rect x="130" y="144" width="90" height="22" rx="3" fill="#c77dff22" stroke="#c77dff"/>
+  <text x="175" y="159" fill="#c77dff" text-anchor="middle">Headers</text>
+  <!-- Queues -->
+  <line x1="230" y1="71" x2="280" y2="71" stroke="#ff6b6b66" stroke-width="1.5" marker-end="url(#rb2)"/>
+  <line x1="230" y1="99" x2="280" y2="99" stroke="#4cc9f066" stroke-width="1.5" marker-end="url(#rb3)"/>
+  <line x1="230" y1="127" x2="280" y2="127" stroke="#26de8166" stroke-width="1.5" marker-end="url(#rb4)"/>
+  <line x1="230" y1="127" x2="280" y2="155" stroke="#26de8133" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#rb4)"/>
+  <rect x="280" y="55" width="85" height="30" rx="4" fill="#ffffff10" stroke="#ffffff33"/>
+  <text x="322" y="74" fill="#ccc" text-anchor="middle">Queue A</text>
+  <rect x="280" y="84" width="85" height="30" rx="4" fill="#ffffff10" stroke="#ffffff33"/>
+  <text x="322" y="103" fill="#ccc" text-anchor="middle">Queue B</text>
+  <rect x="280" y="113" width="85" height="30" rx="4" fill="#ffffff10" stroke="#ffffff33"/>
+  <text x="322" y="132" fill="#ccc" text-anchor="middle">Queue C</text>
+  <rect x="280" y="142" width="85" height="30" rx="4" fill="#ff475722" stroke="#ff475766" stroke-dasharray="4,2"/>
+  <text x="322" y="161" fill="#ff4757" text-anchor="middle">DLX ☠</text>
+  <!-- Consumers -->
+  <line x1="365" y1="70" x2="400" y2="70" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#rb5)"/>
+  <line x1="365" y1="99" x2="400" y2="99" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#rb5)"/>
+  <line x1="365" y1="127" x2="400" y2="127" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#rb5)"/>
+  <rect x="400" y="52" width="80" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa"/>
+  <text x="440" y="71" fill="#00d4aa" text-anchor="middle">Consumer</text>
+  <rect x="400" y="84" width="80" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa"/>
+  <text x="440" y="103" fill="#00d4aa" text-anchor="middle">Consumer</text>
+  <rect x="400" y="113" width="80" height="30" rx="4" fill="#00d4aa22" stroke="#00d4aa"/>
+  <text x="440" y="132" fill="#00d4aa" text-anchor="middle">Consumer</text>
+  <!-- Note -->
+  <text x="280" y="195" fill="#888" text-anchor="middle" font-size="10">Сообщение удаляется после ACK · DLX — необработанные сообщения</text>
+  <defs>
+    <marker id="rb1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd32a"/></marker>
+    <marker id="rb2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ff6b6b"/></marker>
+    <marker id="rb3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4cc9f0"/></marker>
+    <marker id="rb4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#26de81"/></marker>
+    <marker id="rb5" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffffff88"/></marker>
+  </defs>
+</svg>`,
+
+// RBAC vs ABAC
+rbac: `<svg viewBox="0 0 540 200" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="540" height="200" rx="8" fill="#0d0d18"/>
+  <!-- RBAC -->
+  <text x="120" y="20" fill="#ff4757" text-anchor="middle" font-weight="700" font-size="12">RBAC</text>
+  <rect x="10" y="30" width="60" height="28" rx="4" fill="#4cc9f022" stroke="#4cc9f0"/>
+  <text x="40" y="48" fill="#4cc9f0" text-anchor="middle">User</text>
+  <line x1="70" y1="44" x2="95" y2="44" stroke="#4cc9f066" stroke-width="1.5" marker-end="url(#rc1)"/>
+  <rect x="95" y="30" width="65" height="28" rx="4" fill="#ffd93d22" stroke="#ffd93d"/>
+  <text x="127" y="48" fill="#ffd93d" text-anchor="middle">Role</text>
+  <text x="85" y="38" fill="#888" font-size="9">assigned</text>
+  <line x1="160" y1="44" x2="185" y2="44" stroke="#ffd93d66" stroke-width="1.5" marker-end="url(#rc2)"/>
+  <rect x="185" y="30" width="75" height="28" rx="4" fill="#26de8122" stroke="#26de81"/>
+  <text x="222" y="48" fill="#26de81" text-anchor="middle">Permission</text>
+  <text x="172" y="38" fill="#888" font-size="9">has</text>
+  <!-- roles list -->
+  <text x="40" y="78" fill="#888" text-anchor="middle" font-size="9">alice</text>
+  <text x="127" y="78" fill="#ffd93d" text-anchor="middle" font-size="9">admin</text>
+  <text x="222" y="78" fill="#26de81" text-anchor="middle" font-size="9">read·write·delete</text>
+  <text x="40" y="94" fill="#888" text-anchor="middle" font-size="9">bob</text>
+  <text x="127" y="94" fill="#ffd93d" text-anchor="middle" font-size="9">viewer</text>
+  <text x="222" y="94" fill="#26de81" text-anchor="middle" font-size="9">read</text>
+  <text x="120" y="115" fill="#888" text-anchor="middle" font-size="9">Просто в реализации · подходит большинству систем</text>
+  <!-- ABAC -->
+  <line x1="280" y1="20" x2="280" y2="190" stroke="#ffffff15" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="420" y="20" fill="#ff4757" text-anchor="middle" font-weight="700" font-size="12">ABAC</text>
+  <rect x="290" y="30" width="240" height="75" rx="5" fill="#c77dff15" stroke="#c77dff" stroke-width="1.5"/>
+  <text x="410" y="48" fill="#c77dff" text-anchor="middle" font-weight="700">Policy Engine</text>
+  <text x="410" y="65" fill="#888" text-anchor="middle">Subject.dept == Resource.category</text>
+  <text x="410" y="81" fill="#888" text-anchor="middle">AND time BETWEEN 9:00 AND 18:00</text>
+  <rect x="295" y="120" width="70" height="26" rx="3" fill="#4cc9f022" stroke="#4cc9f0"/>
+  <text x="330" y="137" fill="#4cc9f0" text-anchor="middle" font-size="9">User attrs</text>
+  <rect x="375" y="120" width="70" height="26" rx="3" fill="#ffd93d22" stroke="#ffd93d"/>
+  <text x="410" y="137" fill="#ffd93d" text-anchor="middle" font-size="9">Resource attrs</text>
+  <rect x="455" y="120" width="70" height="26" rx="3" fill="#26de8122" stroke="#26de81"/>
+  <text x="490" y="137" fill="#26de81" text-anchor="middle" font-size="9">Env attrs</text>
+  <text x="410" y="172" fill="#888" text-anchor="middle" font-size="9">Гибче, но сложнее · подходит для сложных прав доступа</text>
+  <defs>
+    <marker id="rc1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4cc9f0"/></marker>
+    <marker id="rc2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd93d"/></marker>
+  </defs>
+</svg>`,
+
+// Outbox Pattern
+outbox: `<svg viewBox="0 0 540 195" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="540" height="195" rx="8" fill="#0d0d18"/>
+  <text x="270" y="20" fill="#ffd32a" text-anchor="middle" font-weight="700" font-size="12">Outbox Pattern — атомарность БД + брокер</text>
+  <!-- App -->
+  <rect x="10" y="38" width="90" height="40" rx="5" fill="#4cc9f022" stroke="#4cc9f0" stroke-width="1.5"/>
+  <text x="55" y="63" fill="#4cc9f0" text-anchor="middle">Application</text>
+  <!-- Transaction box -->
+  <rect x="120" y="28" width="210" height="120" rx="6" fill="#ffd93d10" stroke="#ffd93d66" stroke-dasharray="5,3"/>
+  <text x="225" y="46" fill="#ffd93d" text-anchor="middle" font-size="10">Одна транзакция</text>
+  <!-- DB -->
+  <rect x="130" y="55" width="85" height="40" rx="4" fill="#ff6b6b22" stroke="#ff6b6b"/>
+  <text x="172" y="73" fill="#ff6b6b" text-anchor="middle">Business</text>
+  <text x="172" y="87" fill="#ff6b6b" text-anchor="middle">DB Table</text>
+  <!-- Outbox table -->
+  <rect x="225" y="55" width="95" height="40" rx="4" fill="#26de8122" stroke="#26de81"/>
+  <text x="272" y="73" fill="#26de81" text-anchor="middle">Outbox</text>
+  <text x="272" y="87" fill="#26de81" text-anchor="middle">Table</text>
+  <!-- CDC / Poller -->
+  <rect x="130" y="108" width="190" height="30" rx="4" fill="#c77dff22" stroke="#c77dff"/>
+  <text x="225" y="127" fill="#c77dff" text-anchor="middle">CDC / Poller (Debezium)</text>
+  <!-- arrows -->
+  <line x1="100" y1="58" x2="128" y2="65" stroke="#4cc9f066" stroke-width="1.5" marker-end="url(#ob1)"/>
+  <line x1="100" y1="68" x2="128" y2="80" stroke="#4cc9f066" stroke-width="1.5"/>
+  <line x1="215" y1="75" x2="225" y2="75" stroke="#26de8166" stroke-width="1.5" marker-end="url(#ob2)"/>
+  <line x1="225" y1="95" x2="225" y2="108" stroke="#c77dff66" stroke-width="1.5" marker-end="url(#ob3)"/>
+  <!-- Broker -->
+  <line x1="320" y1="122" x2="380" y2="122" stroke="#c77dff66" stroke-width="1.5" marker-end="url(#ob3)"/>
+  <rect x="380" y="105" width="75" height="40" rx="4" fill="#ffd32a22" stroke="#ffd32a"/>
+  <text x="417" y="127" fill="#ffd32a" text-anchor="middle">Kafka /</text>
+  <text x="417" y="140" fill="#ffd32a" text-anchor="middle">RabbitMQ</text>
+  <!-- Consumer -->
+  <line x1="455" y1="125" x2="490" y2="125" stroke="#ffd32a66" stroke-width="1.5" marker-end="url(#ob4)"/>
+  <rect x="490" y="108" width="42" height="40" rx="4" fill="#00d4aa22" stroke="#00d4aa"/>
+  <text x="511" y="127" fill="#00d4aa" text-anchor="middle">Con-</text>
+  <text x="511" y="141" fill="#00d4aa" text-anchor="middle">sumer</text>
+  <!-- note -->
+  <text x="270" y="170" fill="#888" text-anchor="middle" font-size="10">Гарантия: At least once · Idempotency Key у консьюмера защищает от дублей</text>
+  <defs>
+    <marker id="ob1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4cc9f0"/></marker>
+    <marker id="ob2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#26de81"/></marker>
+    <marker id="ob3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#c77dff"/></marker>
+    <marker id="ob4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd32a"/></marker>
+  </defs>
+</svg>`,
+
+// Нормализация 1НФ→3НФ
+normalization: `<svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="10">
+  <rect width="560" height="200" rx="8" fill="#0d0d18"/>
+  <text x="280" y="18" fill="#ff6b6b" text-anchor="middle" font-weight="700" font-size="12">Нормализация: 1НФ → 2НФ → 3НФ</text>
+  <!-- 1NF -->
+  <rect x="8" y="28" width="155" height="100" rx="5" fill="#ff6b6b18" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="85" y="44" fill="#ff6b6b" text-anchor="middle" font-weight="700">1НФ</text>
+  <text x="85" y="58" fill="#888" text-anchor="middle">Атомарные значения</text>
+  <text x="85" y="72" fill="#888" text-anchor="middle">Нет повторяющихся</text>
+  <text x="85" y="84" fill="#888" text-anchor="middle">групп столбцов</text>
+  <rect x="18" y="94" width="135" height="28" rx="3" fill="#ff6b6b22"/>
+  <text x="85" y="107" fill="#26de81" text-anchor="middle">✓ Уникальный PK</text>
+  <text x="85" y="120" fill="#26de81" text-anchor="middle">✓ 1 значение в ячейке</text>
+  <!-- 2NF -->
+  <rect x="200" y="28" width="155" height="100" rx="5" fill="#ffd93d18" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="277" y="44" fill="#ffd93d" text-anchor="middle" font-weight="700">2НФ</text>
+  <text x="277" y="58" fill="#888" text-anchor="middle">1НФ +</text>
+  <text x="277" y="72" fill="#888" text-anchor="middle">Нет частичных</text>
+  <text x="277" y="84" fill="#888" text-anchor="middle">зависимостей от PK</text>
+  <rect x="210" y="94" width="135" height="28" rx="3" fill="#ffd93d22"/>
+  <text x="277" y="107" fill="#26de81" text-anchor="middle">✓ Каждый не-ключевой</text>
+  <text x="277" y="120" fill="#26de81" text-anchor="middle">атрибут зависит от всего PK</text>
+  <!-- 3NF -->
+  <rect x="392" y="28" width="160" height="100" rx="5" fill="#26de8118" stroke="#26de81" stroke-width="1.5"/>
+  <text x="472" y="44" fill="#26de81" text-anchor="middle" font-weight="700">3НФ</text>
+  <text x="472" y="58" fill="#888" text-anchor="middle">2НФ +</text>
+  <text x="472" y="72" fill="#888" text-anchor="middle">Нет транзитивных</text>
+  <text x="472" y="84" fill="#888" text-anchor="middle">зависимостей</text>
+  <rect x="402" y="94" width="140" height="28" rx="3" fill="#26de8122"/>
+  <text x="472" y="107" fill="#26de81" text-anchor="middle">✓ Не-ключевые атрибуты</text>
+  <text x="472" y="120" fill="#26de81" text-anchor="middle">зависят только от PK</text>
+  <!-- arrows -->
+  <line x1="163" y1="78" x2="200" y2="78" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#nm)"/>
+  <line x1="355" y1="78" x2="392" y2="78" stroke="#ffffff44" stroke-width="1.5" marker-end="url(#nm)"/>
+  <!-- bottom note -->
+  <text x="280" y="148" fill="#888" text-anchor="middle">Денормализация — обратный процесс для ускорения OLAP-чтения</text>
+  <rect x="80" y="158" width="390" height="32" rx="5" fill="#c77dff15" stroke="#c77dff33"/>
+  <text x="275" y="172" fill="#c77dff" text-anchor="middle">Bcnf / 4НФ / 5НФ — редко применяются на практике</text>
+  <text x="275" y="184" fill="#888" text-anchor="middle">Ключ: устранение избыточности и аномалий вставки/удаления</text>
+  <defs><marker id="nm" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffffff88"/></marker></defs>
+</svg>`,
+
+// OpenAPI структура
+openapiStructure: `<svg viewBox="0 0 540 210" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="10">
+  <rect width="540" height="210" rx="8" fill="#0d0d18"/>
+  <text x="270" y="18" fill="#4cc9f0" text-anchor="middle" font-weight="700" font-size="12">OpenAPI 3.x — структура файла</text>
+  <!-- Left column: structure tree -->
+  <rect x="8" y="28" width="230" height="172" rx="5" fill="#4cc9f012" stroke="#4cc9f033"/>
+  <text x="20" y="46" fill="#4cc9f0" font-weight="700">openapi: 3.0.3</text>
+  <text x="20" y="62" fill="#ffd93d">info:</text>
+  <text x="36" y="76" fill="#888">  title / version / description</text>
+  <text x="20" y="90" fill="#ffd93d">servers:</text>
+  <text x="36" y="104" fill="#888">  - url: https://api.example.com</text>
+  <text x="20" y="118" fill="#26de81">paths:</text>
+  <text x="36" y="132" fill="#888">  /users/{id}:</text>
+  <text x="52" y="146" fill="#888">    get: · post: · put:</text>
+  <text x="20" y="160" fill="#c77dff">components:</text>
+  <text x="36" y="174" fill="#888">  schemas / securitySchemes</text>
+  <text x="20" y="188" fill="#ff6b6b">security: [{bearerAuth: []}]</text>
+  <!-- Right column: path detail -->
+  <rect x="250" y="28" width="282" height="172" rx="5" fill="#26de8112" stroke="#26de8133"/>
+  <text x="262" y="46" fill="#26de81" font-weight="700">paths → /orders → post:</text>
+  <text x="262" y="62" fill="#888">  summary: Создать заказ</text>
+  <text x="262" y="76" fill="#ffd93d">  parameters:</text>
+  <text x="270" y="90" fill="#888">    - in: header  # path query cookie</text>
+  <text x="262" y="104" fill="#4cc9f0">  requestBody:</text>
+  <text x="270" y="118" fill="#888">    content: application/json</text>
+  <text x="278" y="132" fill="#888">      schema: $ref OrderRequest</text>
+  <text x="262" y="146" fill="#fd79a8">  responses:</text>
+  <text x="270" y="160" fill="#26de81">    201: Created</text>
+  <text x="270" y="174" fill="#ff6b6b">    400 / 401 / 500</text>
+  <text x="270" y="188" fill="#888">    schema: $ref OrderResponse</text>
+</svg>`,
+
+// Wireframe → Mockup → Prototype fidelity
+fidelity: `<svg viewBox="0 0 540 175" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <rect width="540" height="175" rx="8" fill="#0d0d18"/>
+  <text x="270" y="20" fill="#a29bfe" text-anchor="middle" font-weight="700" font-size="12">Low Fidelity → High Fidelity</text>
+  <!-- Arrow baseline -->
+  <line x1="30" y1="100" x2="510" y2="100" stroke="#ffffff22" stroke-width="2" marker-end="url(#fi)"/>
+  <text x="30" y="118" fill="#666" font-size="9">Lo-Fi</text>
+  <text x="480" y="118" fill="#a29bfe" font-size="9">Hi-Fi</text>
+  <!-- Wireframe -->
+  <rect x="30" y="40" width="100" height="52" rx="4" fill="#ffffff12" stroke="#ffffff44" stroke-dasharray="4,3"/>
+  <rect x="38" y="47" width="84" height="12" rx="2" fill="#ffffff22"/>
+  <rect x="38" y="63" width="55" height="8" rx="1" fill="#ffffff15"/>
+  <rect x="38" y="75" width="84" height="10" rx="2" fill="#ffffff15"/>
+  <text x="80" y="105" fill="#666" text-anchor="middle" font-size="10">Wireframe</text>
+  <text x="80" y="118" fill="#888" text-anchor="middle" font-size="9">Balsamiq · draw.io</text>
+  <!-- Mockup -->
+  <rect x="210" y="33" width="120" height="60" rx="6" fill="#a29bfe22" stroke="#a29bfe" stroke-width="1.5"/>
+  <rect x="218" y="40" width="104" height="14" rx="3" fill="#a29bfe44"/>
+  <text x="270" y="52" fill="#fff" text-anchor="middle" font-size="8">Заголовок</text>
+  <rect x="218" y="58" width="68" height="8" rx="2" fill="#a29bfe22"/>
+  <rect x="218" y="70" width="104" height="14" rx="3" fill="#a29bfe66"/>
+  <text x="270" y="80" fill="#fff" text-anchor="middle" font-size="8">Кнопка</text>
+  <text x="270" y="105" fill="#a29bfe" text-anchor="middle" font-size="10">Mockup</text>
+  <text x="270" y="118" fill="#888" text-anchor="middle" font-size="9">Figma · Sketch</text>
+  <!-- Prototype -->
+  <rect x="400" y="30" width="110" height="65" rx="8" fill="#26de8122" stroke="#26de81" stroke-width="2"/>
+  <rect x="408" y="37" width="94" height="15" rx="4" fill="#26de8144"/>
+  <text x="455" y="49" fill="#fff" text-anchor="middle" font-size="8">Navigation Bar</text>
+  <rect x="408" y="56" width="62" height="8" rx="2" fill="#26de8122"/>
+  <rect x="408" y="68" width="94" height="16" rx="4" fill="#26de8166"/>
+  <text x="455" y="80" fill="#fff" text-anchor="middle" font-size="8">→ кликабельно</text>
+  <text x="455" y="105" fill="#26de81" text-anchor="middle" font-size="10">Prototype</text>
+  <text x="455" y="118" fill="#888" text-anchor="middle" font-size="9">Figma Proto · Axure</text>
+  <!-- connecting lines -->
+  <line x1="130" y1="66" x2="210" y2="63" stroke="#ffffff22" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="330" y1="63" x2="400" y2="62" stroke="#ffffff22" stroke-width="1" stroke-dasharray="3,3"/>
+  <!-- labels under -->
+  <text x="270" y="148" fill="#888" text-anchor="middle" font-size="10">Аналитику достаточно wireframe для согласования логики экранов</text>
+  <defs><marker id="fi" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#a29bfe"/></marker></defs>
+</svg>`,
+
+// HTTP request/response анатомия
+httpAnatomy: `<svg viewBox="0 0 540 200" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="10">
+  <rect width="540" height="200" rx="8" fill="#0d0d18"/>
+  <text x="270" y="18" fill="#00d4aa" text-anchor="middle" font-weight="700" font-size="12">HTTP Request / Response</text>
+  <!-- Request -->
+  <rect x="8" y="28" width="245" height="155" rx="5" fill="#00d4aa12" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="130" y="45" fill="#00d4aa" text-anchor="middle" font-weight="700">REQUEST</text>
+  <text x="20" y="62" fill="#ffd93d">POST /orders HTTP/1.1</text>
+  <text x="20" y="78" fill="#888">Host: api.example.com</text>
+  <text x="20" y="92" fill="#4cc9f0">Content-Type: application/json</text>
+  <text x="20" y="106" fill="#4cc9f0">Authorization: Bearer eyJ...</text>
+  <text x="20" y="120" fill="#4cc9f0">X-Request-ID: uuid-1234</text>
+  <line x1="20" y1="128" x2="235" y2="128" stroke="#ffffff22" stroke-width="1"/>
+  <text x="20" y="142" fill="#c77dff">{"productId": 42,</text>
+  <text x="20" y="156" fill="#c77dff"> "quantity": 3}</text>
+  <text x="130" y="178" fill="#888" text-anchor="middle" font-size="9">Start line · Headers · Body</text>
+  <!-- Response -->
+  <rect x="287" y="28" width="245" height="155" rx="5" fill="#26de8112" stroke="#26de81" stroke-width="1.5"/>
+  <text x="409" y="45" fill="#26de81" text-anchor="middle" font-weight="700">RESPONSE</text>
+  <text x="298" y="62" fill="#26de81">HTTP/1.1 201 Created</text>
+  <text x="298" y="78" fill="#888">Content-Type: application/json</text>
+  <text x="298" y="92" fill="#888">Location: /orders/789</text>
+  <text x="298" y="106" fill="#888">Cache-Control: no-store</text>
+  <text x="298" y="120" fill="#888">X-Request-ID: uuid-1234</text>
+  <line x1="298" y1="128" x2="520" y2="128" stroke="#ffffff22" stroke-width="1"/>
+  <text x="298" y="142" fill="#c77dff">{"orderId": 789,</text>
+  <text x="298" y="156" fill="#c77dff"> "status": "created"}</text>
+  <text x="409" y="178" fill="#888" text-anchor="middle" font-size="9">Status line · Headers · Body</text>
+</svg>`,
+
+// Postman коллекция и CI
+postmanCI: `<svg viewBox="0 0 540 185" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="10">
+  <rect width="540" height="185" rx="8" fill="#0d0d18"/>
+  <text x="270" y="18" fill="#e84393" text-anchor="middle" font-weight="700" font-size="12">Postman → Newman → CI/CD</text>
+  <!-- Collection -->
+  <rect x="10" y="30" width="105" height="115" rx="5" fill="#e8439322" stroke="#e84393" stroke-width="1.5"/>
+  <text x="62" y="48" fill="#e84393" text-anchor="middle" font-weight="700">Collection</text>
+  <rect x="18" y="54" width="89" height="16" rx="2" fill="#e8439333"/>
+  <text x="62" y="65" fill="#e84393" text-anchor="middle" font-size="9">POST /login</text>
+  <rect x="18" y="74" width="89" height="16" rx="2" fill="#e8439322"/>
+  <text x="62" y="85" fill="#888" text-anchor="middle" font-size="9">GET /orders</text>
+  <rect x="18" y="94" width="89" height="16" rx="2" fill="#e8439322"/>
+  <text x="62" y="105" fill="#888" text-anchor="middle" font-size="9">PUT /orders/1</text>
+  <rect x="18" y="114" width="89" height="16" rx="2" fill="#e8439322"/>
+  <text x="62" y="125" fill="#888" text-anchor="middle" font-size="9">pm.test(…)</text>
+  <!-- Environments -->
+  <rect x="10" y="153" width="105" height="24" rx="4" fill="#4cc9f022" stroke="#4cc9f0"/>
+  <text x="62" y="169" fill="#4cc9f0" text-anchor="middle">{{base_url}} {{token}}</text>
+  <!-- arrow -->
+  <line x1="115" y1="88" x2="148" y2="88" stroke="#e8439366" stroke-width="2" marker-end="url(#pm1)"/>
+  <!-- Newman -->
+  <rect x="148" y="65" width="110" height="45" rx="5" fill="#ffd93d22" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="203" y="83" fill="#ffd93d" text-anchor="middle" font-weight="700">Newman CLI</text>
+  <text x="203" y="98" fill="#888" text-anchor="middle">newman run</text>
+  <!-- arrow -->
+  <line x1="258" y1="88" x2="295" y2="88" stroke="#ffd93d66" stroke-width="2" marker-end="url(#pm2)"/>
+  <!-- CI box -->
+  <rect x="295" y="30" width="235" height="140" rx="5" fill="#26de8112" stroke="#26de81" stroke-width="1.5"/>
+  <text x="412" y="48" fill="#26de81" text-anchor="middle" font-weight="700">CI Pipeline</text>
+  <rect x="305" y="55" width="215" height="18" rx="3" fill="#26de8122"/>
+  <text x="412" y="68" fill="#26de81" text-anchor="middle">1. Build → Deploy to test</text>
+  <rect x="305" y="77" width="215" height="18" rx="3" fill="#26de8122"/>
+  <text x="412" y="90" fill="#26de81" text-anchor="middle">2. newman run --reporter junit</text>
+  <rect x="305" y="99" width="215" height="18" rx="3" fill="#26de8122"/>
+  <text x="412" y="112" fill="#26de81" text-anchor="middle">3. JUnit report → Test results</text>
+  <rect x="305" y="121" width="95" height="18" rx="3" fill="#26de8133"/>
+  <text x="352" y="134" fill="#26de81" text-anchor="middle">✓ passed</text>
+  <rect x="410" y="121" width="110" height="18" rx="3" fill="#ff475722"/>
+  <text x="465" y="134" fill="#ff4757" text-anchor="middle">✗ failed → alert</text>
+  <text x="412" y="162" fill="#888" text-anchor="middle">GitHub Actions · Jenkins · GitLab CI</text>
+  <defs>
+    <marker id="pm1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#e84393"/></marker>
+    <marker id="pm2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ffd93d"/></marker>
+  </defs>
+</svg>`,
+
+// CJM — Customer Journey Map
+cjm: `<svg viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="10">
+  <rect width="560" height="190" rx="8" fill="#0d0d18"/>
+  <text x="280" y="18" fill="#fd79a8" text-anchor="middle" font-weight="700" font-size="12">Customer Journey Map (CJM)</text>
+  <!-- Stage headers -->
+  <rect x="8" y="28" width="95" height="24" rx="3" fill="#4cc9f022" stroke="#4cc9f0"/><text x="55" y="44" fill="#4cc9f0" text-anchor="middle">Awareness</text>
+  <rect x="112" y="28" width="95" height="24" rx="3" fill="#ffd93d22" stroke="#ffd93d"/><text x="159" y="44" fill="#ffd93d" text-anchor="middle">Consideration</text>
+  <rect x="216" y="28" width="95" height="24" rx="3" fill="#fd79a822" stroke="#fd79a8"/><text x="263" y="44" fill="#fd79a8" text-anchor="middle">Purchase</text>
+  <rect x="320" y="28" width="95" height="24" rx="3" fill="#26de8122" stroke="#26de81"/><text x="367" y="44" fill="#26de81" text-anchor="middle">Retention</text>
+  <rect x="424" y="28" width="128" height="24" rx="3" fill="#c77dff22" stroke="#c77dff"/><text x="488" y="44" fill="#c77dff" text-anchor="middle">Advocacy</text>
+  <!-- Actions row -->
+  <text x="8" y="67" fill="#888" font-size="9">Действия:</text>
+  <text x="55" y="78" fill="#ccc" text-anchor="middle" font-size="9">Видит рекламу</text>
+  <text x="159" y="78" fill="#ccc" text-anchor="middle" font-size="9">Сравнивает</text>
+  <text x="263" y="78" fill="#ccc" text-anchor="middle" font-size="9">Оформляет</text>
+  <text x="367" y="78" fill="#ccc" text-anchor="middle" font-size="9">Пользуется</text>
+  <text x="488" y="78" fill="#ccc" text-anchor="middle" font-size="9">Рекомендует</text>
+  <!-- Emotions row (curve) -->
+  <text x="8" y="97" fill="#888" font-size="9">Эмоции:</text>
+  <polyline points="55,108 159,98 263,118 367,92 488,88" fill="none" stroke="#fd79a8" stroke-width="2"/>
+  <circle cx="55" cy="108" r="4" fill="#fd79a8"/>
+  <circle cx="159" cy="98" r="4" fill="#fd79a8"/>
+  <circle cx="263" cy="118" r="4" fill="#ff4757"/>
+  <circle cx="367" cy="92" r="4" fill="#26de81"/>
+  <circle cx="488" cy="88" r="4" fill="#26de81"/>
+  <!-- Pain points -->
+  <text x="8" y="138" fill="#888" font-size="9">Боли:</text>
+  <text x="263" y="138" fill="#ff4757" text-anchor="middle" font-size="9">⚡ Сложная форма</text>
+  <text x="159" y="138" fill="#ffd93d" text-anchor="middle" font-size="9">⚡ Нет сравнения</text>
+  <!-- Touchpoints -->
+  <text x="8" y="158" fill="#888" font-size="9">Точки:</text>
+  <text x="55" y="158" fill="#4cc9f0" text-anchor="middle" font-size="9">Соцсети</text>
+  <text x="159" y="158" fill="#ffd93d" text-anchor="middle" font-size="9">Сайт / отзывы</text>
+  <text x="263" y="158" fill="#fd79a8" text-anchor="middle" font-size="9">Checkout</text>
+  <text x="367" y="158" fill="#26de81" text-anchor="middle" font-size="9">Приложение</text>
+  <text x="488" y="158" fill="#c77dff" text-anchor="middle" font-size="9">Email / реф</text>
+  <!-- note -->
+  <text x="280" y="178" fill="#666" text-anchor="middle" font-size="9">Боли → User Stories · Точки касания → интеграции и UI требования</text>
+</svg>`,
+};
+
+const TOPICS = [
+  // ── HTTP ──
+  {
+    id:"http", icon:"🌐", label:"HTTP и API", color:"#00d4aa",
+    questions:[
+      {q:"Методы HTTP и их отличия", hint:"GET — получение данных (идемпотентный, без тела). POST — создание ресурса (не идемпотентный). PUT — полная замена ресурса (идемпотентный). PATCH — частичное обновление. DELETE — удаление (идемпотентный). HEAD — как GET, но без тела ответа. OPTIONS — доступные методы для ресурса.", svg:D.httpMethods},
+      {q:"Коды ответов HTTP", hint:"1xx — информационные. 2xx — успех: 200 OK, 201 Created, 204 No Content. 3xx — редиректы: 301 Moved Permanently, 302 Found, 304 Not Modified. 4xx — ошибки клиента: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable Entity, 429 Too Many Requests. 5xx — ошибки сервера: 500, 502 Bad Gateway, 503 Service Unavailable.", svg:D.httpCodes},
+      {q:"Идемпотентность и безопасность методов", hint:"Безопасные (не меняют состояние): GET, HEAD, OPTIONS. Идемпотентные (повторный вызов = тот же результат): GET, HEAD, PUT, DELETE, OPTIONS. POST — ни безопасный, ни идемпотентный. PATCH — не идемпотентный по умолчанию.", svg:D.httpMethods},
+      {q:"Заголовки HTTP (Headers)", hint:"Запрос: Authorization (Bearer token/Basic), Content-Type (application/json), Accept, Cookie, User-Agent, X-Request-ID. Ответ: Content-Type, Set-Cookie, Location (при 201/301), Cache-Control, ETag, Access-Control-Allow-Origin (CORS). Общие: Cache-Control (no-cache, max-age), X-Forwarded-For."},
+      {q:"REST vs SOAP vs GraphQL", hint:"REST: stateless, ресурсы по URL, JSON/XML, HTTP-методы. Плюсы: простота, кэшируемость. SOAP: XML, строгий контракт (WSDL), WS-Security, транзакции. Используется в банках/enterprise. GraphQL: один эндпоинт, клиент запрашивает нужные поля, нет over/under-fetching. Плюсы: гибкость. Минусы: сложность кэширования. Когда НЕ нужен GraphQL: если API простое и фиксированное — REST будет проще.", svg:D.restVsGrpc},
+      {q:"HTTPS и TLS", hint:"TLS (Transport Layer Security) — шифрование соединения. Процесс: TCP handshake → TLS handshake (обмен сертификатами, согласование алгоритма) → симметричное шифрование данных. Сертификаты: CA подписывает, браузер проверяет цепочку доверия. HTTP/2: мультиплексирование, сжатие заголовков, server push."},
+      {q:"CORS — что это и как работает", hint:"Cross-Origin Resource Sharing — механизм безопасности браузера. Браузер посылает preflight OPTIONS-запрос с Origin. Сервер отвечает Access-Control-Allow-Origin, Allow-Methods, Allow-Headers. Если заголовки совпадают — основной запрос разрешён. Credentialed requests: withCredentials=true + Access-Control-Allow-Credentials: true."},
+      {q:"Кэширование в HTTP", hint:"Заголовки: Cache-Control: max-age=3600 (кэш 1 час), no-cache (перепроверить), no-store (не кэшировать), private/public. ETag: сервер возвращает хэш ресурса, клиент посылает If-None-Match — если совпадает, 304 Not Modified. Last-Modified + If-Modified-Since — аналогично по дате."},
+      {q:"JSON Schema — зачем нужен?", hint:"JSON Schema — стандарт для описания и валидации структуры JSON. Позволяет: проверить что поля нужного типа, обязательные поля присутствуют, значения в допустимых диапазонах. Используется в OpenAPI (requestBody/response schema), валидации на бэкенде, в Postman для тестов. Инструменты: ajv, tv4, jsonschema."},
+    ]
+  },
+  // ── SQL ──
+  {
+    id:"sql", icon:"🗄️", label:"SQL и БД", color:"#ff6b6b",
+    questions:[
+      {q:"Виды JOIN и их отличия", hint:"INNER JOIN — только совпадающие строки в обеих таблицах. LEFT JOIN — все строки левой + совпадения справа (NULL если нет). RIGHT JOIN — обратное. FULL OUTER JOIN — все строки из обеих таблиц, NULL там где нет совпадения. CROSS JOIN — декартово произведение. SELF JOIN — таблица с самой собой (иерархии).", svg:D.sqlJoin},
+      {q:"Оконные функции (Window Functions)", hint:"Синтаксис: FUNC() OVER (PARTITION BY col ORDER BY col). Функции: ROW_NUMBER() — уникальный номер строки. RANK() — ранг с пропусками. DENSE_RANK() — без пропусков. LAG(col, n) / LEAD(col, n) — значение строки n позиций назад/вперёд. SUM/AVG/COUNT OVER — нарастающий итог. FIRST_VALUE / LAST_VALUE."},
+      {q:"GROUP BY и агрегации", hint:"SELECT dept, COUNT(*), AVG(salary), MAX(salary) FROM employees GROUP BY dept HAVING COUNT(*) > 5. Порядок: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. HAVING фильтрует агрегированные данные, WHERE — до группировки."},
+      {q:"Индексы и их типы", hint:"B-Tree (по умолчанию) — равенство и диапазон (=, <, >, BETWEEN, LIKE 'abc%'). Hash — только равенство, быстрее B-Tree. GIN — массивы, JSONB, полнотекстовый поиск. GiST — геоданные, диапазоны. Составной индекс: порядок колонок важен (left-prefix rule). UNIQUE INDEX, PARTIAL INDEX (WHERE). Индексы замедляют запись: при каждом INSERT/UPDATE B-Tree перестраивается."},
+      {q:"Транзакции и уровни изоляции", hint:"ACID: Atomicity, Consistency, Isolation, Durability. Уровни: READ UNCOMMITTED — грязное чтение. READ COMMITTED (PostgreSQL default) — нет грязного. REPEATABLE READ — нет неповторяемого. SERIALIZABLE — полная изоляция. Проблемы: грязное/неповторяемое/фантомное чтение.", svg:D.sqlIsolation},
+      {q:"Подзапросы и CTE", hint:"Подзапрос: SELECT * FROM t WHERE id IN (SELECT id FROM t2). CTE: WITH cte AS (SELECT ...) SELECT * FROM cte. Рекурсивное CTE: WITH RECURSIVE tree AS (базовый случай UNION ALL рекурсивный шаг). CTE улучшает читаемость, может использоваться несколько раз в запросе."},
+      {q:"EXPLAIN и оптимизация запросов", hint:"EXPLAIN ANALYZE — план выполнения: Seq Scan (полное), Index Scan (по индексу), Nested Loop / Hash Join / Merge Join. Смотреть: actual time, rows, loops. Seq Scan на большой таблице → добавить индекс. N+1 → JOIN или подзапрос. Избегать SELECT *, функции в WHERE (не использует индекс)."},
+      {q:"SQL vs NoSQL — когда что выбрать?", hint:"SQL: структурированные данные, сложные запросы, транзакции ACID. PostgreSQL, MySQL. NoSQL: неструктурированные данные, огромный объём, горизонтальное масштабирование. MongoDB (документы), Redis (ключ-значение), Cassandra (wide-column), Neo4j (графы). Аналитика → ClickHouse, Redshift (колоночные)."},
+      {q:"OLTP vs OLAP и ETL/ELT", hint:"OLTP — много быстрых транзакций, актуальные данные. PostgreSQL, MySQL. OLAP — сложные аналитические запросы, исторические объёмы. ClickHouse, Redshift, BigQuery. ETL: трансформация до загрузки (Informatica, SSIS). ELT: сначала загрузка в DWH, трансформация внутри (DBT, Spark). Data Warehouse — хранилище для OLAP.", svg:D.etl},
+      {q:"Нормализация и денормализация", hint:"Нормализация: устранение избыточности. 1НФ — атомарные значения. 2НФ — нет частичных зависимостей от PK. 3НФ — нет транзитивных зависимостей. Денормализация — добавление избыточности для ускорения чтения. Оправдана в аналитических системах и отчётах."},
+      {q:"Шардирование и репликация БД", hint:"Репликация — копирование всей БД на другие серверы (Master → Replicas). Читаем с реплик, пишем в мастер. Шардирование — горизонтальное разбиение данных по шардам по ключу. Стратегии: Hash sharding, Range sharding, Directory sharding. Проблемы: cross-shard запросы, перебалансировка. Consistent Hashing — решение.", svg:D.shardVsRepl},
+    ]
+  },
+  // ── АРХИТЕКТУРА ──
+  {
+    id:"arch", icon:"🏗️", label:"Архитектура", color:"#ffd93d",
+    questions:[
+      {q:"Микросервисы vs Монолит", hint:"Монолит: одно приложение, простое развёртывание, легко дебажить. Минусы: сложно масштабировать части. Микросервисы: независимые сервисы по бизнес-доменам, независимое масштабирование. Минусы: сетевые задержки, distributed transactions, сложнее отладка. Монолит → стартап/MVP. Микросервисы → зрелый продукт с разными нагрузками.", svg:D.microVsMono},
+      {q:"CAP-теорема", hint:"В распределённых системах можно гарантировать только 2 из 3: Consistency, Availability, Partition Tolerance. CP: MongoDB, ZooKeeper. AP: Cassandra, DynamoDB. CA: PostgreSQL (не распределённый). На практике P обязательна → выбираем CP или AP.", svg:D.cap},
+      {q:"API Gateway — что это и зачем?", hint:"API Gateway — единая точка входа для всех клиентов. Берёт на себя: аутентификацию и авторизацию, rate limiting, маршрутизацию запросов, логирование, SSL termination, трансформацию запросов/ответов. Примеры: Kong, AWS API Gateway, Nginx, Traefik.", svg:D.apiGateway},
+      {q:"Оркестрация vs Хореография в микросервисах", hint:"Оркестрация — центральный координатор знает весь процесс и вызывает сервисы последовательно. Плюс: логика в одном месте. Минус: единая точка отказа. Инструменты: Camunda, Temporal. Хореография — каждый сервис реагирует на события от брокера. Плюс: слабая связанность. Минус: сложнее отследить весь процесс.", svg:D.saga},
+      {q:"Паттерн Saga", hint:"Saga — управление распределёнными транзакциями через цепочку локальных транзакций. Если шаг падает — выполняются компенсирующие транзакции (rollback предыдущих). Два типа: Choreography Saga (через события) и Orchestration Saga (через оркестратор). Используется вместо двухфазного коммита (2PC).", svg:D.saga},
+      {q:"CQRS vs Event Sourcing", hint:"CQRS — разделение моделей чтения и записи. Write model принимает команды, Read model оптимизирована под запросы. Event Sourcing — хранение состояния как лога событий (не текущего состояния). Текущее состояние = воспроизведение всех событий. Даёт audit log бесплатно. Часто комбинируются: ES + CQRS.", svg:D.cqrs},
+      {q:"Service Mesh и Sidecar паттерн", hint:"Service Mesh — инфраструктурный слой для управления межсервисным взаимодействием через sidecar-прокси. Берёт на себя: mTLS, Circuit Breaker, Retry, Load Balancing, трассировка. Примеры: Istio, Linkerd. Sidecar — вспомогательный контейнер рядом с основным в том же Pod (Kubernetes)."},
+      {q:"Circuit Breaker паттерн", hint:"Circuit Breaker защищает от каскадных отказов. Состояния: Closed (запросы проходят), Open (запросы блокируются немедленно), Half-Open (probe-запрос для проверки восстановления). Порог открытия: N ошибок за T секунд. Реализации: Resilience4j, Istio.", svg:D.circuitBreaker},
+      {q:"Как обеспечить идемпотентность API?", hint:"Идемпотентность — повторный вызов с теми же параметрами даёт тот же результат. Реализация: Idempotency-Key в заголовке запроса (UUID от клиента). Сервер сохраняет ключ + результат в БД/Redis. При повторном запросе — возвращает сохранённый результат. Критично для платежей, создания заказов."},
+      {q:"Масштабирование highload-систем", hint:"Кэширование: Redis/Memcached для горячих данных, CDN для статики. Репликация БД: master для записи, реплики для чтения. Шардирование: горизонтальное разбиение данных. Асинхронность: очереди (Kafka/RabbitMQ) для тяжёлых операций. Load Balancer: Round Robin, Least Connections. Паттерны: CQRS, Event Sourcing.", svg:D.shardVsRepl},
+    ]
+  },
+  // ── ТРЕБОВАНИЯ ──
+  {
+    id:"requirements", icon:"📋", label:"Требования", color:"#c77dff",
+    questions:[
+      {q:"Функциональные vs нефункциональные требования", hint:"Функциональные (ЧТО делает): пользователь авторизуется, система рассчитывает скидку. Нефункциональные (КАК работает): производительность (99% запросов < 200мс), доступность (99.9% SLA = 8.7ч даунтайма/год), безопасность, масштабируемость. FURPS+: Functionality, Usability, Reliability, Performance, Supportability."},
+      {q:"User Story, INVEST и критерии приёмки", hint:"Шаблон: «Как [роль], я хочу [действие], чтобы [ценность]». INVEST: Independent, Negotiable, Valuable, Estimable, Small, Testable. Критерии приёмки (AC): Given/When/Then (Gherkin). Definition of Done — требования к качеству команды."},
+      {q:"Use Case vs User Story", hint:"Use Case: формальная нотация, основной поток + альтернативы + исключения, актёры и система, UML UC диаграмма. User Story: agile, неформальная, бизнес-ценность, короткая. UC — waterfall/UP/RUP. US — Scrum/Kanban. UC лучше для сложных сценариев с ветвлением."},
+      {q:"Методы сбора требований", hint:"Интервью — открытые/закрытые вопросы со стейкхолдерами. Анкетирование — для большого числа пользователей. Наблюдение (shadowing). Воркшопы (JAD). Анализ документов — AS-IS процессы. Прототипирование — ранняя обратная связь. 5 Why, Jobs-to-be-Done. AS-IS → TO-BE."},
+      {q:"Трассировка требований (RTM)", hint:"RTM (Requirements Traceability Matrix) — связь требований с бизнес-целями, тест-кейсами, компонентами. Позволяет: оценить влияние изменений, убедиться что требование покрыто тестами, найти orphan requirements. Инструменты: Jira (Epic → Story → Task), Confluence, DOORS, Polarion."},
+      {q:"BPMN нотация", hint:"Events (круги): Start, End, Intermediate. Tasks (прямоугольники). Gateways (ромбы): Exclusive XOR — одно условие, Parallel AND — все параллельно, Inclusive OR — одно или несколько. Pools (участники), Lanes (роли внутри пула). Message Flow — пунктир между Pools.", svg:D.bpmn},
+      {q:"BPMN vs UML Activity vs IDEF0", hint:"BPMN — бизнес-процессы, участники (Pools/Lanes), события, шлюзы. Исполняемый стандарт (Camunda). UML Activity — логика ПО, алгоритмы потоков внутри системы. IDEF0 — функциональное моделирование, фокус на функции + ICOM (Input/Control/Output/Mechanism).", svg:D.bpmn},
+      {q:"State Machine (диаграмма состояний)", hint:"Описывает жизненный цикл сущности: конечное число состояний + переходы по триггерам. Заказ: Created → Paid → Shipped → Delivered → Cancelled. Платёж: Pending → Processing → Completed/Failed. В коде: XState, Spring State Machine.", svg:D.stateMachine},
+      {q:"Транзитные требования и DMN", hint:"Транзитные — требования к переходному периоду (AS-IS → TO-BE): миграция данных, параллельная работа, обучение пользователей, откат при ошибке. DMN (Decision Model and Notation) — таблицы решений для бизнес-правил. Пример: таблица скидок по типу клиента и сумме."},
+      {q:"Как работать с Legacy-системами?", hint:"Подходы: обратный инжиниринг (reverse engineering) кода и БД. Анализ БД — схема + хранимые процедуры содержат бизнес-логику. Интервью с экспертами. Анализ логов и трафика (Wireshark, прокси). Паттерны: Strangler Fig (постепенное замещение), Anti-Corruption Layer (слой трансляции)."},
+    ]
+  },
+  // ── ИНТЕГРАЦИИ ──
+  {
+    id:"integrations", icon:"🔗", label:"Интеграции", color:"#06d6a0",
+    questions:[
+      {q:"REST API — принципы и проектирование", hint:"6 принципов: Stateless, Client-Server, Cacheable, Uniform Interface, Layered System, Code on Demand. URL ресурсами: /users/{id} не /getUser. Версионирование: /v1/users. Пагинация: offset/limit или cursor-based. HATEOAS — ссылки в ответе на следующие действия.", svg:D.restVsGrpc},
+      {q:"Kafka vs RabbitMQ", hint:"Kafka: лог событий, хранит сообщения (retention period), pull-модель, consumer group, очень высокий throughput. Используется для event streaming, CDC, аналитики. RabbitMQ: традиционная очередь, push-модель, сообщение удаляется после обработки, exchange+routing key, DLQ. Используется для task queues, RPC.", svg:D.kafka},
+      {q:"gRPC vs REST для внутренних сервисов", hint:"gRPC: Protocol Buffers (бинарный формат), HTTP/2, streaming, автогенерация клиентов. Плюсы: скорость (в ~5-10 раз быстрее JSON), типизация, streaming. Минусы: сложнее отладка, браузеры не поддерживают. Выбор: gRPC → внутренние вызовы. REST → публичный API, браузер.", svg:D.restVsGrpc},
+      {q:"Паттерны интеграции", hint:"Point-to-Point: прямое соединение. Pub/Sub: издатель → топик → подписчики. Request-Reply: запрос через очередь. Dead Letter Queue: необработанные сообщения. Idempotency Key: защита от дублей при retry. Saga: распределённые транзакции. Outbox Pattern: атомарность БД + очередь.", svg:D.saga},
+      {q:"Webhook vs Polling vs WebSocket", hint:"Polling: клиент периодически спрашивает «есть новое?». Long Polling: сервер держит соединение до ответа. Webhook: сервер зовёт клиента по URL при событии — нужен публичный endpoint + идемпотентность. WebSocket: постоянное двустороннее соединение, real-time (чат, торги). SSE: сервер → клиент, однонаправленный стриминг."},
+      {q:"Exactly Once гарантия доставки", hint:"At most once (потери возможны), At least once (дубли возможны), Exactly once (нет потерь и дублей). Реализация: Idempotency Key + Acknowledgment + Deduplication. В Kafka: idempotent producer + transactions. Сложно и дорого — часто достаточно At least once + идемпотентный обработчик.", svg:D.kafka},
+      {q:"OAuth 2.0 и OpenID Connect", hint:"OAuth 2.0 — протокол делегирования авторизации через токены. Flows: Authorization Code (web), Client Credentials (M2M), Implicit (устарел), ROPC (legacy). OpenID Connect (OIDC) — надстройка над OAuth 2.0. Добавляет аутентификацию: ID Token (JWT) с данными пользователя. Refresh Token — долгоживущий токен.", svg:D.oauth},
+      {q:"Как документировать API помимо Swagger", hint:"AsyncAPI — стандарт для event-driven API (Kafka, MQTT, WebSocket). Postman Collections — исполняемая документация с примерами. README + мануалы по бизнес-сценариям. Arc42, C4 model — для архитектурного контекста. ADR (Architecture Decision Records) — документирование архитектурных решений."},
+    ]
+  },
+  // ── БЕЗОПАСНОСТЬ ──
+  {
+    id:"security", icon:"🔐", label:"Безопасность", color:"#ff4757",
+    questions:[
+      {q:"Аутентификация vs Авторизация", hint:"Аутентификация (AuthN) — КТО ты? Проверка личности: логин/пароль, OTP, biometrics, сертификат. Результат: identity. Авторизация (AuthZ) — ЧТО тебе можно? Проверка прав доступа к ресурсам. Порядок: сначала AuthN, потом AuthZ. Ошибки: 401 — не аутентифицирован, 403 — нет прав."},
+      {q:"RBAC vs ABAC", hint:"RBAC — права через роли. Пользователь → роль (admin, editor, viewer) → разрешения. Просто в реализации, подходит большинству систем. ABAC — права через атрибуты субъекта, объекта и окружения. Пример: пользователь с dept=Finance может видеть документы category=Finance в рабочее время. Гибче, но сложнее."},
+      {q:"SQL-инъекция — как предотвратить?", hint:"SQL Injection — вставка SQL через пользовательский ввод. На уровне ТЗ требовать: параметризованные запросы / prepared statements (НЕ конкатенацию строк), ORM с защитой по умолчанию, валидацию входных данных, принцип минимальных прав для DB-пользователя. Тестирование: OWASP ZAP, sqlmap. OWASP Top 10."},
+      {q:"Проектирование под ФЗ-152 (персональные данные)", hint:"ФЗ-152 — закон о персональных данных в РФ. Требования: согласие субъекта, хранение ПДн граждан РФ на серверах в РФ (локализация), возможность удаления/исправления, минимизация сбора, назначение ответственного, уведомление Роскомнадзора. В проекте: шифрование, аудит доступа, разграничение прав."},
+      {q:"JWT — структура и риски", hint:"JWT = header.payload.signature (Base64). Header: алгоритм (HS256, RS256). Payload: claims (sub, iat, exp, roles). Signature: HMAC или RSA. НЕ хранить секреты в payload (он декодируется без ключа). Короткий access token (15 мин), долгий refresh token. Риски: алгоритм none, слабый секрет, хранение в localStorage (XSS).", svg:D.jwt},
+      {q:"Логи, метрики, трассировка (Observability)", hint:"Три столпа observability. Логи — текстовые записи событий (Structured Logging: JSON). ELK или Grafana Loki. Метрики — числовые агрегаты: CPU, RPS, error rate, latency. Prometheus + Grafana. Distributed Tracing — путь запроса через все сервисы (Trace ID / Span ID). Jaeger, Zipkin, OpenTelemetry. SLA, SLO, SLI."},
+    ]
+  },
+  // ── ПРОЦЕССЫ И ЛИДЕРСТВО ──
+  {
+    id:"processes", icon:"👥", label:"Процессы и лидерство", color:"#fd9644",
+    questions:[
+      {q:"Что делать при противоречивых требованиях?", hint:"Алгоритм: зафиксировать противоречие письменно, собрать встречу со всеми стейкхолдерами. Выяснить бизнес-цели за каждым требованием (5 Why). Приоритизировать по ценности для бизнеса (Impact/Risk). Предложить варианты решения с trade-offs. Зафиксировать принятое решение (ADR). Эскалировать если консенсус не достигнут."},
+      {q:"Онбординг нового аналитика в команду", hint:"Неделя 1 — знакомство с контекстом (продукт, домен, команда, стек). Неделя 2-3 — погружение в процессы (Jira, Confluence, ритуалы). Месяц 2 — первые самостоятельные задачи. Артефакты: база знаний/Wiki с архитектурой, deep-dive сессии с разработчиками, закреплённый ментор. Первая маленькая задача как можно раньше."},
+      {q:"Code Review документации", hint:"Проверять: полнота (все сценарии описаны?), однозначность (нет двойного толкования?), соответствие архитектурным гайдам, актуальность (нет устаревших данных?), тест-покрытие (есть AC для каждого требования?). Форматы: PR в Git (Docs-as-Code), комментарии в Confluence. Цель — предотвратить неоднозначность до разработки."},
+      {q:"Приоритизация бэклога: RICE и MoSCoW", hint:"RICE: Reach × Impact × Confidence / Effort. Чем выше score — тем выше приоритет. MoSCoW: Must (без этого продукт не работает), Should (важно, но можно подождать), Could (приятно иметь), Won't (не в этом релизе). Kano: Basic / Performance / Delighters. Приоритизация — совместное решение с PO и стейкхолдерами."},
+      {q:"Как управлять конфликтами в команде?", hint:"Модель Thomas-Kilmann: Соперничество, Сотрудничество, Компромисс, Избегание, Приспособление. В большинстве ситуаций — Сотрудничество. Техника: активное слушание, «я-высказывания», фокус на целях продукта а не позициях. Конфликт идей (task conflict) полезен. Конфликт отношений (relationship conflict) — деструктивен."},
+      {q:"Развитие компетенций и Performance Review", hint:"Развитие младших: парная работа, code review документации, постепенное усложнение задач. Матрица компетенций (skills matrix) — прозрачные критерии уровней. Performance Review: регулярные 1:1, фиксация достижений в течение периода, SMART-цели, конкретная обратная связь по поведению (не по личности). Метод STAR для оценки достижений."},
+      {q:"Как внедрить новый стандарт документирования?", hint:"top-down (приказ) — быстро, но сопротивление. Bottom-up (от команды) — медленно, но принятие. Лучше: вовлечь команду в разработку стандарта (workshop), начать с пилота на одном проекте, показать ценность (меньше вопросов = быстрее разработка). Создать шаблоны (templates) в Confluence/Jira. Включить ревью документации в DoR."},
+    ]
+  },
+  // ── КЕЙСЫ ──
+  {
+    id:"cases", icon:"🧩", label:"Кейсы и системный дизайн", color:"#26de81",
+    questions:[
+      {q:"Система бронирования билетов: race conditions", hint:"Проблема: два пользователя одновременно выбирают последнее место. Решения: 1) Пессимистичная блокировка (SELECT FOR UPDATE). 2) Оптимистичная блокировка — поле version. 3) Резервирование с таймаутом — место заморожено на 15 мин (статус RESERVED), освобождается если не оплачено. 4) Очередь на оплату (Kafka) — сериализуем запросы."},
+      {q:"Лента новостей: проектирование как в соцсети", hint:"Fanout on write (push): при публикации поста пишем его в ленты всех подписчиков. Быстрое чтение. Проблема: «звезда» с 10M подписчиков — запись в 10M лент. Fanout on read (pull): при открытии ленты собираем посты. Медленное чтение. Гибридный подход: push для обычных, pull для «звёзд». Кэширование: Redis. Пагинация: cursor-based."},
+      {q:"Миграция данных Oracle → PostgreSQL без простоя", hint:"Zero-downtime: 1) Dual-write — пишем в обе БД. 2) Backfill — фоновая миграция исторических данных. 3) Сравнение — валидация консистентности. 4) Переключение чтения на PostgreSQL постепенно. 5) Отключение Oracle. Инструменты: AWS DMS, pgloader, Debezium (CDC). Риски: SQL-диалекты, триггеры, хранимые процедуры."},
+      {q:"Как спроектировать систему уведомлений?", hint:"Компоненты: Notification Service → Template Service → Channel Router (email/SMS/push/in-app) → Queue (Kafka/RabbitMQ) → Provider adapters (SendGrid, Twilio, Firebase). Priority Queue для критичных уведомлений (OTP). Retry + DLQ для неудачных отправок. Rate limiting чтобы не спамить."},
+      {q:"Проектирование URL-сокращателя (bit.ly)", hint:"POST /shorten → короткий код (Base62 от ID). GET /{code} → 301 редирект. БД: {code, long_url, created_at, clicks}. Кэш (Redis): горячие ссылки. Аналитика: клики, гео — асинхронно в Kafka → ClickHouse. Проблема коллизий при рандоме — проверять уникальность."},
+      {q:"Как расследовать инцидент на проде?", hint:"Шаги: 1) Когда началось? Что изменилось (деплой, конфиг)? 2) Анализ логов и метрик (Grafana, Kibana) — найти аномалии. 3) Distributed tracing — найти медленный/падающий шаг. 4) Постмортем (RCA) — 5 Why, timeline событий, action items. Аналитик описывает пользовательский impact. SLA/SLO — считаем нарушение."},
+    ]
+  },
+  // ── OPENAPI ──
+  {
+    id:"openapi", icon:"📄", label:"OpenAPI / Swagger", color:"#4cc9f0",
+    questions:[
+      {q:"Swagger vs OpenAPI — в чём разница?", hint:"OpenAPI — стандарт/спецификация для описания REST API (YAML/JSON). Текущая версия: 3.1.0. Swagger — набор инструментов для работы с OpenAPI: Swagger UI (визуализация), Swagger Editor (редактор), Swagger Codegen (генерация клиентов/серверов). Swagger Specification в 2016 переименован в OpenAPI Specification."},
+      {q:"Структура OpenAPI спецификации", hint:"openapi: '3.0.3'. info: title, version, description. servers: [{url}]. paths: /users: get: summary, parameters, responses. components: schemas, securitySchemes. security: глобально или на операцию. tags: группировка. $ref: '#/components/schemas/User' — переиспользование."},
+      {q:"Типы данных и схемы в OpenAPI", hint:"Примитивы: string (format: date, date-time, email, uuid, password), integer (int32, int64), number (float, double), boolean. Массив: type: array, items. Объект: type: object, properties, required. Комбинации: oneOf (одно из), anyOf (любое), allOf (наследование), not. nullable: true для null. enum для ограниченных значений."},
+      {q:"Документирование параметров", hint:"in: path (/users/{id}) — required: true. in: query (?limit=10). in: header (Authorization). in: cookie. requestBody: required, content: {application/json: schema}. responses: 200, 400, 401, 404, 500. Примеры: example или examples в schema. description на каждый параметр — обязательно."},
+      {q:"Аутентификация в OpenAPI", hint:"securitySchemes: apiKey: {type: apiKey, in: header, name: X-API-Key}. http: {type: http, scheme: bearer, bearerFormat: JWT} или {scheme: basic}. oauth2: flows: clientCredentials / authorizationCode. Применение: security: [{bearerAuth: []}] на операцию или глобально."},
+      {q:"AsyncAPI для брокеров и Mock-серверы", hint:"AsyncAPI — стандарт документации для event-driven API (Kafka, RabbitMQ, MQTT, WebSocket). Аналог OpenAPI для асинхронных интеграций. Описывает: каналы (topics/queues), сообщения (schemas), операции (publish/subscribe). Mock Server в Postman/Prism — имитирует ответ бэкенда по OpenAPI spec для параллельной разработки. Contract Testing (Pact) — проверяет соответствие контракту в CI."},
+    ]
+  },
+  // ── ДИАГРАММЫ ──
+  {
+    id:"diagrams", icon:"📊", label:"Диаграммы и нотации", color:"#ff9f43",
+    questions:[
+      {q:"UML диаграммы для аналитика", hint:"Структурные: Class (классы, атрибуты, методы, связи), Component (компоненты системы), Deployment (физическое развёртывание), ER (сущности БД). Поведенческие: Use Case (актёры и сценарии), Sequence (взаимодействие во времени), Activity (процессы, аналог BPMN), State (состояния объекта). Выбор: Use Case → начало. Sequence → интеграции. State → жизненный цикл."},
+      {q:"Sequence диаграмма и фрейм alt", hint:"Участники сверху, вертикальная ось — время. Стрелки: сплошная (синхронный), пунктир (возврат), полный наконечник (async). Фрейм alt — условная логика (if/else). Фреймы: loop, opt (если), par (параллельно), ref (ссылка). Activation box — период активности. Инструменты: PlantUML, Mermaid, draw.io.", svg:D.sequence},
+      {q:"Диаграмма классов: ассоциации в UML", hint:"Aggregation (агрегация) — ромб незакрашенный: часть может существовать без целого (Команда — Игроки). Composition (композиция) — ромб закрашенный: часть не существует без целого (Дом — Комнаты). Inheritance (наследование) — пустой наконечник стрелки. Dependency — пунктир. Multiplicity: 1, 0..*, 1..*"},
+      {q:"ER диаграмма и нотация Crow's Foot", hint:"Сущность — прямоугольник. PK подчёркнут. Crow's Foot: ||  — один обязательный, |O — один опциональный, >| — многие обязательные, >O — многие опциональные. M:N → промежуточная таблица. Инструменты: ERDPlus, dbdiagram.io, Lucidchart, DBeaver (из реальной БД)."},
+      {q:"C4 Model — уровни абстракции", hint:"Context (L1): система + внешние пользователи и системы. Container (L2): сервисы, БД, SPA. Component (L3): модули внутри контейнера. Code (L4): классы. Каждый уровень детализирует предыдущий. Инструменты: Structurizr, draw.io. Дополнение: Deployment Diagram — физическое размещение (серверы, облако, Kubernetes).", svg:D.c4},
+      {q:"BPMN: шлюзы, события и пулы", hint:"Шлюзы: Exclusive (XOR, ромб с X) — один путь. Parallel (AND, ромб с +) — все пути. Inclusive (OR, ромб с O) — один или несколько. Типы событий: Message, Timer, Error, Escalation, Compensation. Pool — участник процесса. Lane — роль внутри пула. Message Flow — пунктир между Pools.", svg:D.bpmn},
+      {q:"Docs-as-Code: PlantUML и Mermaid", hint:"Docs-as-Code: документация в Git рядом с кодом. PlantUML: текстовые диаграммы @startuml/@enduml — sequence, class, component, state. Рендеринг в IntelliJ, VS Code, Confluence. Mermaid: диаграммы в Markdown (```mermaid). Поддерживается в GitHub, GitLab, Confluence, Notion. Преимущества: версионирование, code review, CI/CD для публикации."},
+    ]
+  },
+  // ── AGILE ──
+  {
+    id:"agile", icon:"🔄", label:"Agile / Scrum / Продукт", color:"#fd79a8",
+    questions:[
+      {q:"Agile, Scrum и Kanban — в чём разница?", hint:"Agile — философия/ценности (Agile Manifesto): люди, работающий продукт, сотрудничество, реакция на изменения. Scrum — итеративный фреймворк (спринты, роли, события). Kanban — метод визуализации потока: доска, WIP-лимиты, Lead/Cycle Time метрики. Scrumban — гибрид."},
+      {q:"Scrum церемонии и артефакты", hint:"Церемонии: Sprint Planning, Daily Standup (15 мин), Sprint Review (демо), Retrospective, Backlog Refinement. Артефакты: Product Backlog, Sprint Backlog, Increment. Роли: Product Owner, Scrum Master, Development Team. Velocity = среднее SP за спринт.", svg:D.scrum},
+      {q:"Story Points, PERT и оценка трудозатрат", hint:"Story Points — относительная оценка сложности. Planning Poker: Fibonacci (1,2,3,5,8,13,21). PERT-оценка: (Оптимистичная + 4×Реалистичная + Пессимистичная) / 6. Velocity — среднее SP за спринт. T-shirt sizing: XS/S/M/L/XL для быстрой оценки. SP — не часы, оценивать командой совместно.", svg:D.scrum},
+      {q:"Definition of Ready (DoR) и Done (DoD)", hint:"DoR — критерии готовности задачи к разработке: написана US с AC, нет блокеров, оценена, зависимости определены, дизайн готов, API-контракты согласованы. DoD — критерии завершённости: код написан, тесты пройдены, документация обновлена, задача прошла ревью. Оба формируются командой."},
+      {q:"Приоритизация: RICE, MoSCoW, Kano", hint:"RICE: Reach × Impact × Confidence / Effort. MoSCoW: Must, Should, Could, Won't. Kano: Basic (ожидаемо) / Performance (больше = лучше) / Delighters (WOW). DAU/MAU — метрики для оценки Reach. Все фреймворки — инструмент, не приговор. Приоритизация совместно с PO."},
+      {q:"CJM и Discovery-фаза", hint:"CJM (Customer Journey Map) — карта пути клиента: шаги, боли (pain points), точки касания (touchpoints), эмоции. Создаётся по результатам UX-исследований. Discovery: аналитик проверяет продуктовые гипотезы (CustDev), проектирует CJM, формирует концепцию до разработки. User Story Mapping (USM) — расстановка задач по оси времени пользователя."},
+      {q:"Scope Creep, MVP и техдолг", hint:"Scope Creep — незаметное расширение скоупа. Управление: Change Request процесс. MVP — минимальный набор функций для решения основной боли + получения обратной связи. Lean Startup: Build → Measure → Learn. Техдолг — накопленные компромиссные решения. Аналитик помогает описывать техдолг с бизнес-обоснованием."},
+      {q:"Метрики продукта: DAU/MAU, NPS, AARRR", hint:"DAU/MAU — активность аудитории. DAU/MAU ratio — «липкость» продукта (>20% хорошо). NPS — готовность рекомендовать (от -100 до +100). CSAT — удовлетворённость. AARRR: Acquisition → Activation → Retention → Referral → Revenue. Аналитик формулирует метрики в требованиях к аналитической системе."},
+    ]
+  },
+  // ── UI ──
+  {
+    id:"ui", icon:"🎨", label:"UI / UX / Прототипирование", color:"#a29bfe",
+    questions:[
+      {q:"Wireframe vs Mockup vs Prototype", hint:"Wireframe — набросок структуры (ч/б, без деталей): блоки, навигация. Balsamiq, draw.io, Miro. Mockup — визуальный дизайн: цвета, шрифты, статичный. Figma, Sketch. Prototype — кликабельный, имитирует UX: переходы, взаимодействия. Figma Prototype, Axure. Fidelity: Low → High."},
+      {q:"10 эвристик Нильсена", hint:"1) Видимость статуса. 2) Соответствие реальному миру. 3) Контроль пользователя (отмена). 4) Согласованность. 5) Предотвращение ошибок. 6) Узнавание важнее вспоминания. 7) Гибкость (shortcuts). 8) Эстетика и минимализм. 9) Помощь при ошибках. 10) Документация. Закон Фиттса: цель — большая и близкая."},
+      {q:"Design System и Atomic Design", hint:"Design System — набор переиспользуемых компонентов + правила. Atomic Design: Atoms (кнопка, input) → Molecules (поле с подписью) → Organisms (форма) → Templates → Pages. Material Design, Ant Design, Chakra UI. В Figma: Components, Variants, Auto Layout, Design Tokens. Аналитику важно знать DS команды."},
+      {q:"UX Research: методы и применение", hint:"Качественные: интервью (JTBD), usability testing (think aloud), Card Sorting, Contextual Inquiry. Количественные: A/B тесты, воронки, heatmaps/session recording (Hotjar, Clarity), опросы (NPS, CSAT, SUS). JTBD: «Когда [ситуация], я хочу [мотивация], чтобы [ожидаемый результат]». Результаты → персоны → CJM → требования."},
+      {q:"Снифферы трафика (Charles, Proxyman)", hint:"Снифферы перехватывают HTTP/HTTPS трафик. Charles Proxy, Proxyman (macOS), Fiddler (Windows), mitmproxy (CLI). Применение: анализ реальных API-запросов мобильного приложения, подмена ответов (mock) для тестирования edge cases, отладка интеграций. Для HTTPS: нужно установить корневой сертификат. Полезно для обратного инжиниринга API legacy-систем."},
+      {q:"Camunda и исполняемые BPMN", hint:"Camunda Modeler — редактор для исполняемых BPMN-диаграмм. Отличие от draw.io: диаграмма становится исполняемым процессом в Camunda Engine. Service Task — вызов внешнего сервиса. User Task — задача для человека. Decision Task — DMN-таблица. Аналитик проектирует процесс → разработчик добавляет реализацию в теги.", svg:D.bpmn},
+    ]
+  },
+  // ── БРОКЕРЫ ──
+  {
+    id:"brokers", icon:"📨", label:"Брокеры сообщений", color:"#ffd32a",
+    questions:[
+      {q:"Kafka: топики, партиции, consumer groups", hint:"Топик — логический канал сообщений. Партиция — единица масштабирования: сообщения упорядочены, каждое имеет offset. Строгий порядок гарантируется только внутри партиции. Consumer Group — несколько консьюмеров читают один топик, каждая партиция назначается одному консьюмеру в группе. ZooKeeper/KRaft — управление метаданными кластера.", svg:D.kafka},
+      {q:"Kafka: гарантии доставки и Backpressure", hint:"At most once (acks=0), At least once (acks=all + retry), Exactly once (idempotent producer + transactions). Backpressure — консьюмер не успевает за продюсером. Решения: увеличить параллелизм (партиции + консьюмеры), оптимизировать обработку. Consumer Lag monitoring в Grafana/Burrow.", svg:D.kafka},
+      {q:"RabbitMQ: exchanges, routing, DLX", hint:"Exchange — точка входа. Типы: Direct (точный routing key), Topic (шаблон *.error.#), Fanout (всем очередям), Headers (по заголовкам). DLX (Dead Letter Exchange) — для сообщений которые не удалось обработать (ошибка, TTL истёк, очередь полна). Полезен для дебага и retry-логики."},
+      {q:"Kafka vs RabbitMQ — когда что выбрать?", hint:"Kafka: хранение сообщений долгосрочно, event streaming, CDC, аналитика, replay событий, высокий throughput. Слабое место: сложная маршрутизация. RabbitMQ: сложная маршрутизация по правилам, приоритеты в очередях, классические task queues, RPC-паттерн. Слабое место: сообщения удаляются — нет replay.", svg:D.kafka},
+      {q:"Описание структуры сообщения для брокера", hint:"Аналитик описывает схему сообщения: JSON Schema (type, properties, required, enum) или Apache Avro (бинарный, строгая типизация). Schema Registry (Confluent) — централизованное хранилище схем, версионирование, проверка совместимости (BACKWARD, FORWARD, FULL). Фиксировать: имя поля, тип, обязательность, описание, пример."},
+      {q:"Паттерн Outbox и CDC", hint:"Проблема: сохранить в БД и отправить в брокер атомарно. Outbox Pattern: в той же транзакции пишем в таблицу outbox. Отдельный процесс (CDC или polling) читает outbox и отправляет в брокер. CDC через Debezium: читает transaction log PostgreSQL/MySQL, публикует в Kafka. Гарантия: At least once + Idempotency Key у консьюмера."},
+    ]
+  },
+  // ── ИНСТРУМЕНТЫ ──
+  {
+    id:"tools", icon:"🛠️", label:"Инструменты аналитика", color:"#e17055",
+    questions:[
+      {q:"Postman: коллекции, переменные, тесты", hint:"Коллекция — группа запросов. Переменные: Global, Environment (dev/staging/prod), Collection, Local. Синтаксис: {{base_url}}, {{token}}. Pre-request Script: pm.environment.set('key', val). Tests: pm.test('Status 200', () => pm.response.to.have.status(200)). Mock Server — имитирует бэкенд по схеме. Newman — CLI-runner для CI/CD."},
+      {q:"Jira и Confluence: структура проекта", hint:"Jira иерархия: Epic → Story → Task → Sub-task. Типы: Story, Bug, Task, Spike (исследование). JQL: project = PROJ AND status = 'In Progress' AND assignee = currentUser(). Confluence: Spaces → Pages (Wiki) → Templates. Архитектура: Требования / Архитектура / Onboarding / Meeting notes. Ссылки Jira ↔ Confluence — связь задачи и документации."},
+      {q:"YAML и конфигурационные форматы", hint:"YAML — человекочитаемый формат данных. Применение: OpenAPI спецификации, CI/CD (GitHub Actions, GitLab CI), Kubernetes manifests, Ansible. Ключевые правила: отступы пробелами (не табы), списки через -, строки с : в значении в кавычках. JSON — подмножество YAML. TOML — альтернатива для конфигов."},
+      {q:"Git для аналитика (Docs-as-Code)", hint:"Git — система контроля версий. Аналитику: хранить OpenAPI YAML, PlantUML-диаграммы, ADR, схемы данных. Команды: git clone, git pull, git add, git commit -m, git push. PR (Pull Request) — механизм ревью документации. Ветки: main (стабильная), feature/... (новая фича). Конфликты в YAML/Markdown разрешаются текстово."},
+      {q:"ИИ в работе аналитика", hint:"Применения: генерация User Stories и AC по описанию фичи, создание JSON Schema и OpenAPI YAML, написание SQL-запросов, генерация тест-кейсов по требованиям, рефакторинг документации. Эффективный промпт: роль + контекст + задача + формат вывода + ограничения. К 2026: ИИ берёт рутину, аналитик фокусируется на глубоком проектировании и бизнес-задачах."},
+      {q:"Маппинг данных и ETL/ELT", hint:"Data Mapping — правила соответствия полей между системами при интеграции/миграции. Документ: поле-источник, тип, поле-назначение, правило трансформации, пример, обработка NULL. ETL: трансформация до загрузки (Informatica, SSIS, Apache NiFi). ELT: загрузка в DWH, трансформация внутри (DBT, Spark). DWH (Redshift, BigQuery, Snowflake) — для OLAP.", svg:D.etl},
+    ]
+  },
+  // ── API-ТЕСТЫ ──
+  {
+    id:"postman", icon:"📮", label:"API-тестирование и Postman", color:"#e84393",
+    questions:[
+      {q:"Коллекции, окружения и переменные", hint:"Коллекция — логическая группа запросов (по фиче или сервису). Окружения — наборы переменных: dev/staging/prod с разными base_url и токенами. Иерархия: Global → Collection → Environment → Local. Pre-request Script — до запроса (авто-логин, генерация подписи). Tests — после запроса (проверки ответа)."},
+      {q:"Написание тестов в Postman", hint:"pm.test('описание', () => { ... }). Статус: pm.response.to.have.status(201). Тело: const j = pm.response.json(); pm.expect(j.id).to.be.a('number'). Время: pm.expect(pm.response.responseTime).to.be.below(500). Заголовки: pm.response.to.have.header('Content-Type'). Сохранение: pm.environment.set('token', j.access_token)."},
+      {q:"Mock Server и контрактное тестирование", hint:"Mock Server в Postman: создаётся из коллекции или OpenAPI spec. Возвращает example-ответы. Фронтенд разрабатывается независимо от бэкенда. Prism (CLI) — mock + validation сервер из OpenAPI файла. Contract Testing (Pact) — проверяет что consumer и provider соблюдают контракт в CI. Consumer-driven contracts."},
+      {q:"Newman и интеграция в CI/CD", hint:"Newman — CLI-runner для Postman коллекций. Установка: npm install -g newman. Запуск: newman run collection.json -e env.json --reporters cli,junit. В GitHub Actions: step с newman run → JUnit отчёт → визуализация в test results. Мониторинг в Postman Cloud: scheduled runs, уведомления при падении. Smoke-тесты после деплоя."},
+    ]
+  },
+];
+
+const QUICKREF = {
+  // ── КАТЕГОРИИ (вкладки) ──────────────────────────────────────────────────
+  tabs: [
+    { id:'all',   label:'Все' },
+    { id:'arch',  label:'Архитектура' },
+    { id:'http',  label:'HTTP / API' },
+    { id:'sql',   label:'SQL / БД' },
+    { id:'agile', label:'Agile' },
+    { id:'tools', label:'Инструменты' },
+    { id:'interview', label:'Интервью' },
+  ],
+
+  // ── КАРТОЧКИ ──────────────────────────────────────────────────────────────
+  cards: [
+
+    // ════════════════════════ АРХИТЕКТУРА ════════════════════════
+    {
+      cat:'arch', type:'wide', color:'#ffd93d',
+      title:'C4 Model — архитектурная документация', badge:'Simon Brown · 2006',
+      desc:'Иерархическая нотация из 4 уровней абстракции для описания и коммуникации архитектуры системы',
+      sections:[
+        {
+          title:'4 уровня абстракции', color:'#ffd93d',
+          items:[
+            '<b style="color:#4cc9f0">L1 Context</b> — система в окружении: кто пользователи, какие внешние системы. Аудитория: бизнес, stakeholders. Один прямоугольник = ваша система',
+            '<b style="color:#ffd93d">L2 Container</b> — приложения и хранилища внутри системы: SPA, API-сервис, БД, очередь. Аудитория: разработчики, архитекторы',
+            '<b style="color:#c77dff">L3 Component</b> — модули внутри одного контейнера: контроллеры, репозитории, сервисы. Аудитория: разработчики конкретного сервиса',
+            '<b style="color:#26de81">L4 Code</b> — UML-классы, методы, поля. Обычно генерируется IDE автоматически. Редко нужен вручную',
+          ]
+        },
+        {
+          title:'Плюсы', color:'#26de81',
+          items:[
+            '<span class="qr-tag tag-plus">+</span> Единый язык между бизнесом и разработкой — каждый уровень для своей аудитории',
+            '<span class="qr-tag tag-plus">+</span> Иерархия устраняет перегруженность: не всё на одной схеме',
+            '<span class="qr-tag tag-plus">+</span> Легко версионировать как код (Structurizr DSL, PlantUML, Mermaid)',
+            '<span class="qr-tag tag-plus">+</span> Нет жёсткого набора нотаций — гибко адаптируется',
+            '<span class="qr-tag tag-plus">+</span> Tooling: Structurizr генерирует все уровни из одного DSL-файла',
+          ]
+        },
+        {
+          title:'Минусы и ограничения', color:'#ff4757',
+          items:[
+            '<span class="qr-tag tag-minus">−</span> Нет нотации для поведения (потоков, событий) — дополняй Sequence / BPMN',
+            '<span class="qr-tag tag-minus">−</span> L3 Component быстро устаревает — код меняется быстрее документации',
+            '<span class="qr-tag tag-minus">−</span> Нет стандарта для микросервисных mesh-топологий (нужен Deployment Diagram дополнительно)',
+            '<span class="qr-tag tag-minus">−</span> Может дублировать то, что уже есть в OpenAPI / AsyncAPI',
+          ]
+        },
+        {
+          title:'Дополнительные диаграммы', color:'#4cc9f0',
+          items:[
+            '<b>System Landscape</b> — несколько систем в одном пространстве (L0, надстройка над C4)',
+            '<b>Deployment Diagram</b> — физическое размещение: серверы, Docker, Kubernetes, CDN, облако',
+            '<b>Dynamic Diagram</b> — поведение в рантайме: последовательность вызовов для конкретного сценария',
+          ]
+        },
+        {
+          title:'Когда применять', color:'#fd79a8',
+          items:[
+            '<span class="qr-tag tag-when">когда</span> Новый проект — начни с L1 Context для синхронизации с бизнесом',
+            '<span class="qr-tag tag-when">когда</span> Онбординг разработчика — L2 Container даёт быстрый обзор',
+            '<span class="qr-tag tag-when">когда</span> Распил монолита — L2+L3 помогает понять зависимости',
+            '<span class="qr-tag tag-when">когда</span> Интеграция внешних систем — L1 Context + Dynamic Diagram',
+            '<span class="qr-tag tag-minus">не когда</span> Нужна схема бизнес-процесса — используй BPMN',
+            '<span class="qr-tag tag-minus">не когда</span> Нужен API-контракт — используй OpenAPI',
+          ]
+        },
+        {
+          title:'Инструменты', color:'#e17055',
+          items:[
+            '<b>Structurizr</b> — официальный инструмент Саймона Брауна. DSL → все уровни автоматически. Есть SaaS и self-hosted',
+            '<b>PlantUML</b> + C4-PlantUML библиотека — текстовые диаграммы в Git',
+            '<b>Mermaid</b> — поддержка C4 с v9. Работает прямо в GitHub/Confluence',
+            '<b>draw.io / Lucidchart</b> — графический редактор, есть C4 stencils',
+            '<b>IcePanel</b> — интерактивная C4 с zoom-уровнями',
+          ]
+        },
+        {
+          title:'Шаблон Structurizr DSL', color:'#a29bfe',
+          items:[
+            '<code style="color:#a29bfe;font-size:11px">workspace {</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;model {</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;&nbsp;&nbsp;user = person "Пользователь"</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;&nbsp;&nbsp;system = softwareSystem "Моя система" {</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;api = container "API" "Node.js"</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;db = container "PostgreSQL" "" "Database"</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;&nbsp;&nbsp;}</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;&nbsp;&nbsp;user -&gt; api "использует"</code>',
+            '<code style="color:#888;font-size:11px">&nbsp;&nbsp;&nbsp;&nbsp;api -&gt; db "читает/пишет"</code>',
+            '<code style="color:#a29bfe;font-size:11px">}}</code>',
+          ]
+        },
+        {
+          title:'Советы на интервью', color:'#ff9f43',
+          items:[
+            '<span class="qr-tag tag-tip">совет</span> Всегда называй уровень: «Это L2 Container — здесь я показываю сервисы и БД»',
+            '<span class="qr-tag tag-tip">совет</span> Начни с L1 при System Design задаче — покажи границы системы',
+            '<span class="qr-tag tag-tip">совет</span> Уточни аудиторию: «Для бизнеса достаточно L1, для разработчиков покажу L2»',
+            '<span class="qr-tag tag-note">факт</span> C4 ≠ единственная нотация: она хорошо сочетается с Sequence Diagram и BPMN',
+            '<span class="qr-tag tag-note">факт</span> Автор — Саймон Браун (Simon Brown), книга «Software Architecture for Developers»',
+          ]
+        },
+      ]
+    },
+
+    {
+      cat:'arch', type:'wide', color:'#ffd93d',
+      title:'Паттерны архитектуры — шпаргалка', badge:'системный дизайн',
+      desc:'Ключевые паттерны, которые спрашивают на интервью fullstack-аналитика',
+      sections:[
+        {
+          title:'CQRS', color:'#ff6b6b',
+          items:[
+            'Command Query Responsibility Segregation — разделение моделей чтения и записи',
+            '<span class="qr-tag tag-plus">+</span> Оптимизация под нагрузку: read-реплики, кэш для чтения',
+            '<span class="qr-tag tag-plus">+</span> Чистая модель предметной области на стороне записи',
+            '<span class="qr-tag tag-minus">−</span> Eventual consistency между Write DB и Read DB',
+            '<span class="qr-tag tag-when">когда</span> Разные требования к чтению и записи, highload-аналитика',
+          ]
+        },
+        {
+          title:'Event Sourcing', color:'#4cc9f0',
+          items:[
+            'Состояние = воспроизведение лога неизменяемых событий (не текущее значение)',
+            '<span class="qr-tag tag-plus">+</span> Audit log бесплатно, time-travel debugging, replay',
+            '<span class="qr-tag tag-minus">−</span> Сложность: проекции, снапшоты, эволюция схемы событий',
+            '<span class="qr-tag tag-when">когда</span> Финансы, аудит, корзина покупок — важна история',
+            'Часто комбинируется с CQRS: ES хранит, CQRS — разделяет чтение и запись',
+          ]
+        },
+        {
+          title:'Saga', color:'#ffd93d',
+          items:[
+            'Распределённые транзакции без 2PC — цепочка локальных транзакций + компенсации',
+            '<b>Orchestration Saga</b> — центральный оркестратор управляет шагами (Camunda, Temporal)',
+            '<b>Choreography Saga</b> — каждый сервис реагирует на события брокера',
+            '<span class="qr-tag tag-plus">+</span> Нет глобальной блокировки ресурсов',
+            '<span class="qr-tag tag-minus">−</span> Сложная отладка, компенсирующие транзакции не всегда возможны',
+          ]
+        },
+        {
+          title:'BFF · Sidecar · Outbox', color:'#c77dff',
+          items:[
+            '<b>BFF</b> (Backend for Frontend) — отдельный бэкенд-слой под каждый фронтенд (iOS, Web)',
+            '<b>Sidecar</b> — вспом. контейнер рядом с сервисом в том же Pod: логи, mTLS, прокси',
+            '<b>Outbox Pattern</b> — атомарная запись в БД + брокер: пишем в таблицу outbox в одной транзакции, CDC читает и отправляет в Kafka',
+            '<span class="qr-tag tag-when">когда</span> Outbox: нужна гарантия At-least-once без 2PC',
+          ]
+        },
+      ]
+    },
+
+    // ════════════════════════ HTTP / API ════════════════════════
+    {
+      cat:'http', type:'normal', color:'#00d4aa',
+      title:'HTTP коды ответов',
+      items:['200 OK — успех','201 Created — создан','204 No Content — без тела','301 Moved Permanently','302 Found — временный редирект','304 Not Modified — кэш актуален','400 Bad Request — ошибка клиента','401 Unauthorized — не аутентифицирован','403 Forbidden — нет прав','404 Not Found','409 Conflict — конфликт состояния','422 Unprocessable Entity','429 Too Many Requests','500 Internal Server Error','502 Bad Gateway','503 Service Unavailable']
+    },
+    {
+      cat:'http', type:'normal', color:'#4cc9f0',
+      title:'REST методы',
+      items:['GET — получить (идемпотентный, безопасный)','POST — создать (не идемпотентный)','PUT — заменить целиком (идемпотентный)','PATCH — обновить частично','DELETE — удалить (идемпотентный)','HEAD — только заголовки (без тела)','OPTIONS — доступные методы (preflight)']
+    },
+    {
+      cat:'http', type:'normal', color:'#06d6a0',
+      title:'OAuth 2.0 flows',
+      items:['Authorization Code — web apps, server-side (самый безопасный)','PKCE — Authorization Code без секрета для SPA/mobile','Client Credentials — M2M, сервис-сервис','Implicit — устаревший (не рекомендуется)','ROPC — legacy, доверенные приложения','Device Code — TV, CLI без браузера']
+    },
+
+    // ════════════════════════ SQL / БД ════════════════════════
+    {
+      cat:'sql', type:'normal', color:'#ff6b6b',
+      title:'SQL JOIN',
+      items:['INNER — только строки с совпадением в обеих таблицах','LEFT — все из левой + совпадения из правой (NULL)','RIGHT — все из правой + совпадения из левой','FULL OUTER — все строки из обеих (NULL где нет пары)','CROSS — декартово произведение (N×M строк)','SELF — таблица с самой собой (иерархии, деревья)']
+    },
+    {
+      cat:'sql', type:'normal', color:'#ffd93d',
+      title:'ACID транзакций',
+      items:['Atomicity — всё или ничего (rollback при ошибке)','Consistency — данные всегда в согласованном состоянии','Isolation — транзакции изолированы друг от друга','Durability — зафиксированные данные не теряются (WAL)']
+    },
+    {
+      cat:'sql', type:'normal', color:'#ff9f43',
+      title:'Уровни изоляции SQL',
+      items:['READ UNCOMMITTED — грязное чтение возможно','READ COMMITTED — без грязного чтения (default в PostgreSQL)','REPEATABLE READ — без неповторяемого чтения','SERIALIZABLE — полная изоляция, нет фантомов','Проблемы: грязное / неповторяемое / фантомное чтение']
+    },
+    {
+      cat:'sql', type:'normal', color:'#ffd32a',
+      title:'Kafka: гарантии доставки',
+      items:['At most once — потери возможны, дублей нет (acks=0)','At least once — потерь нет, дубли возможны (acks=all + retry)','Exactly once — идемпотентный producer + transactions (дорого)','Порядок — только внутри одной партиции','Consumer Lag — отставание консьюмера от продюсера']
+    },
+
+    // ════════════════════════ AGILE ════════════════════════
+    {
+      cat:'agile', type:'normal', color:'#fd79a8',
+      title:'INVEST для User Story',
+      items:['Independent — независимая от других историй','Negotiable — детали обсуждаемы до начала спринта','Valuable — создаёт ценность для пользователя или бизнеса','Estimable — команда может её оценить','Small — помещается в один спринт','Testable — есть чёткие критерии приёмки']
+    },
+    {
+      cat:'agile', type:'normal', color:'#fd9644',
+      title:'Приоритизация бэклога',
+      items:['RICE = Reach × Impact × Confidence / Effort','MoSCoW: Must / Should / Could / Won\'t','Kano: Basic (раздражает при отсутствии) / Performance / Delighter','WSJF = CoD / Job Duration (SAFe)','Матрица Эйзенхауэра: срочное × важное','ICE = Impact × Confidence × Ease']
+    },
+
+    // ════════════════════════ ИНСТРУМЕНТЫ ════════════════════════
+    {
+      cat:'tools', type:'normal', color:'#e17055',
+      title:'Postman: быстрый старт',
+      items:['{{base_url}} — переменная окружения','pm.response.to.have.status(200)','pm.expect(res.json().id).to.be.a("number")','pm.environment.set("token", res.json().token)','Pre-request Script — авто-логин до запроса','Newman — CLI запуск в CI/CD']
+    },
+
+    // ════════════════════════ ИНТЕРВЬЮ ════════════════════════
+    {
+      cat:'interview', type:'normal', color:'#ff4757',
+      title:'Тактика ответа на вопрос',
+      items:['Повтори вопрос своими словами — покажи понимание','Думай вслух — интервьюер оценивает процесс мышления','Задавай уточняющие вопросы — нет идеального решения','Начни с простого решения, затем усложняй','Называй trade-offs каждого подхода','Признай незнание честно — лучше чем выдумывать','Приводи конкретные примеры из практики']
+    },
+    {
+      cat:'interview', type:'normal', color:'#fd9644',
+      title:'STAR метод ответа на кейс',
+      items:['Situation — опиши контекст и проблему (2-3 предложения)','Task — какая задача перед тобой стояла','Action — что конкретно ты сделал (больше всего времени)','Result — измеримый результат (метрики, время, деньги)','Типичные ошибки: говорить «мы» вместо «я», нет результата']
+    },
+    {
+      cat:'interview', type:'normal', color:'#c77dff',
+      title:'System Design — план ответа',
+      items:['1. Уточни требования (DAU, RPS, размер данных)','2. Нарисуй L1 Context (C4) — общая схема','3. Выбери тип хранилища (SQL / NoSQL / Cache)','4. API дизайн (REST / gRPC / событийный)','5. Масштабирование (шардинг, репликация, CDN)','6. Надёжность (Circuit Breaker, retry, DLQ)','7. Мониторинг (логи, метрики, трейсинг)']
+    },
+  ]
+};
+
+
+
+
+// ─── VACANCY DATA ─────────────────────────────────────────────────────────────
+const VACANCY = {
+  company: 'Технократия',
+  role: 'Системный аналитик (Senior)',
+  project: 'Зарубежная платёжная система',
+
+  tabs: [
+    { id:'forecast', label:'🎯 Прогноз вопросов' },
+    { id:'cheatsheet', label:'📋 Шпаргалка под вакансию' },
+    { id:'requirements', label:'📌 Разбор требований' },
+  ],
+
+  // ── ПРОГНОЗ ВОПРОСОВ ──────────────────────────────────────────────────────
+  questions: [
+    {
+      id:'payments', color:'#ff6b6b',
+      title:'Платёжные системы и банковские процессы',
+      prob:'high', probLabel:'Точно спросят',
+      qs:[
+        {
+          q:'Опишите жизненный цикл платёжной транзакции — от инициации до подтверждения.',
+          hint:'Ожидают: авторизация → клиринг → расчёт. Mention: 3DS, ISO 20022, статусы (PENDING→PROCESSING→COMPLETED/FAILED). Связать с идемпотентностью и Idempotency-Key в API.'
+        },
+        {
+          q:'Как обеспечить идемпотентность при повторных запросах на списание средств?',
+          hint:'Ключевые тезисы: Idempotency-Key в заголовке, хранение результата в БД по ключу, возврат кэшированного ответа при дубле. Связать с At-least-once и Exactly-once.'
+        },
+        {
+          q:'Как проектируется система международных переводов? Какие есть ограничения и протоколы?',
+          hint:'SWIFT (межбанковские переводы), SEPA (еврозона), IBAN, валютный обмен (FX rate), AML/KYC проверки, санкционные списки. Latency vs Consistency trade-off.'
+        },
+        {
+          q:'Как бы вы описали процесс возврата (chargeback/refund) в BPMN?',
+          hint:'Показать умение строить процесс: инициация → верификация → компенсирующая транзакция → уведомление. State machine для статусов платежа.'
+        },
+        {
+          q:'Какие риски гонки данных (race condition) существуют при одновременных списаниях?',
+          hint:'SELECT FOR UPDATE (пессимистичная блокировка), optimistic locking (поле version), очередь через Kafka для сериализации запросов. Двойное списание как главный риск.'
+        },
+      ]
+    },
+    {
+      id:'arch', color:'#ffd93d',
+      title:'Архитектура микросервисов',
+      prob:'high', probLabel:'Точно спросят',
+      qs:[
+        {
+          q:'Нарисуйте C4 L1 и L2 для платёжной системы.',
+          hint:'L1: Клиент → Payment System → Bank Core, SWIFT Gateway, Notification Service. L2: API Gateway → Payment Service → Transaction DB (Postgres) → Kafka → Settlement Service. Уточни аудиторию каждого уровня.'
+        },
+        {
+          q:'Как бы вы реализовали распределённую транзакцию списания + уведомления без 2PC?',
+          hint:'Saga (Orchestration через Camunda или Choreography через Kafka). Шаги: списать → зарезервировать → уведомить. Компенсирующие транзакции при ошибке. Idempotent consumer.'
+        },
+        {
+          q:'Как обеспечить консистентность данных между Payment Service и Account Service?',
+          hint:'Outbox Pattern: запись в таблицу outbox в одной транзакции с обновлением баланса. CDC (Debezium) читает outbox → Kafka. Eventual consistency как допустимый trade-off.'
+        },
+        {
+          q:'Что такое CQRS и когда он нужен в платёжной системе?',
+          hint:'Write: команды изменения баланса, строгая консистентность. Read: история транзакций, выписки — отдельная денормализованная модель. Пример: ElasticSearch для поиска по транзакциям.'
+        },
+        {
+          q:'Как проектируется API Gateway для платёжного сервиса?',
+          hint:'Rate limiting (защита от DDoS), аутентификация (OAuth 2.0 + JWT), маршрутизация, SSL termination, трансформация запросов. Kong / AWS API Gateway / Nginx.'
+        },
+      ]
+    },
+    {
+      id:'integration', color:'#4cc9f0',
+      title:'Интеграции и брокеры сообщений',
+      prob:'high', probLabel:'Точно спросят',
+      qs:[
+        {
+          q:'Kafka vs RabbitMQ — что выберете для платёжной системы и почему?',
+          hint:'Kafka: лог событий, retention, replay, высокий throughput — подходит для аудит-лога транзакций и event sourcing. RabbitMQ: task queue, DLQ — для уведомлений и retry-логики. В реальном проекте оба могут сосуществовать.'
+        },
+        {
+          q:'Как гарантировать обработку платежа exactly-once при сбоях?',
+          hint:'Kafka: idempotent producer (enable.idempotence=true) + transactions. Consumer: idempotency key в БД, проверка перед обработкой. Outbox Pattern — гарантия публикации события.'
+        },
+        {
+          q:'Опишите интеграцию с внешним банком через REST API. Что учтёте в спецификации?',
+          hint:'OpenAPI 3.0 спецификация, versioning (/v1/), retry с exponential backoff, Circuit Breaker (Resilience4j), таймауты, webhook для асинхронного подтверждения, mTLS для безопасности.'
+        },
+        {
+          q:'Как описать асинхронный API (события между сервисами)? Что такое AsyncAPI?',
+          hint:'AsyncAPI — стандарт описания event-driven API (аналог OpenAPI для Kafka/WebSocket). Описывает каналы, сообщения, схемы. Tooling: AsyncAPI Studio, генерация клиентов.'
+        },
+      ]
+    },
+    {
+      id:'requirements', color:'#06d6a0',
+      title:'Требования, UML, BPMN',
+      prob:'mid', probLabel:'Скорее всего',
+      qs:[
+        {
+          q:'Как описать User Story для сценария пополнения кошелька?',
+          hint:'«Как пользователь, я хочу пополнить кошелёк с банковской карты, чтобы оплачивать услуги». Критерии приёмки по INVEST. AC: Given/When/Then. Уточнить: лимиты, валюты, ошибки карты.'
+        },
+        {
+          q:'Нарисуйте BPMN-диаграмму процесса «Оплата заказа» с обработкой ошибок.',
+          hint:'Pool: Клиент + Платёжная система + Банк. Tasks: Инициировать платёж → Авторизовать карту. Gateway XOR: успех/ошибка. Error Event → компенсация. Timer Event → таймаут (30 сек). End: Success/Failed.'
+        },
+        {
+          q:'Чем Use Case отличается от User Story? Когда использовать каждый?',
+          hint:'Use Case — формальный контракт: акторы, основной поток, альтернативы, исключения. User Story — гибкая заготовка с ценностью для пользователя. UC → детальное ТЗ для разработки. US → бэклог Agile-команды.'
+        },
+        {
+          q:'Как описать State Machine для статусов транзакции?',
+          hint:'Состояния: CREATED → PENDING → PROCESSING → COMPLETED / FAILED / CANCELLED. Триггеры переходов (события). Финальные состояния. UML State Diagram или таблица переходов. Реализация: XState, Spring State Machine.'
+        },
+      ]
+    },
+    {
+      id:'security', color:'#c77dff',
+      title:'Безопасность и UI/UX',
+      prob:'mid', probLabel:'Скорее всего',
+      qs:[
+        {
+          q:'Как реализуется OAuth 2.0 в платёжном приложении? Какой flow выбрать?',
+          hint:'Web-app: Authorization Code + PKCE. M2M (сервис → сервис): Client Credentials. Access token (JWT, 15 мин) + Refresh token. Scope: payments:write, payments:read. Хранить refresh в HttpOnly cookie.'
+        },
+        {
+          q:'Что учесть в UX платёжного флоу для кроссплатформенного приложения?',
+          hint:'Progressive disclosure (не показывать всё сразу). Оптимистичный UI (показать «обрабатывается» мгновенно). Error states явные и понятные. Accessibility (a11y). Биометрия для подтверждения. Адаптивность: iOS / Android / Web — разные паттерны.'
+        },
+        {
+          q:'Как защититься от double spending (двойного списания)?',
+          hint:'Idempotency Key (уникальный ключ запроса). Pessimistic lock (SELECT FOR UPDATE). Distributed lock (Redis Redlock). Версионирование записей (optimistic locking). Финансовая сверка (reconciliation).'
+        },
+      ]
+    },
+    {
+      id:'sql', color:'#ff9f43',
+      title:'SQL и базы данных',
+      prob:'mid', probLabel:'Скорее всего',
+      qs:[
+        {
+          q:'Как спроектировать схему БД для хранения транзакций? Учтите масштаб.',
+          hint:'Таблицы: accounts (id, balance, currency, version), transactions (id, from_acc, to_acc, amount, currency, status, idempotency_key, created_at). Индексы: by account_id, by status, by created_at. Партиционирование по дате для больших объёмов.'
+        },
+        {
+          q:'Какой уровень изоляции транзакций выбрать для операций с балансом?',
+          hint:'SERIALIZABLE — полная изоляция, но блокировки. REPEATABLE READ (MySQL default) — без фантомов в InnoDB. PostgreSQL: REPEATABLE READ + Serializable Snapshot Isolation (SSI) без блокировок. Для финансов: SERIALIZABLE или SELECT FOR UPDATE + READ COMMITTED.'
+        },
+        {
+          q:'Как реализовать историю изменений баланса без потери данных?',
+          hint:'Immutable transactions log (только INSERT, не UPDATE). Текущий баланс = SUM транзакций. Snapshot для производительности (материализованное представление). Event Sourcing как архитектурный паттерн.'
+        },
+      ]
+    },
+  ],
+
+  // ── ШПАРГАЛКА ПОД ВАКАНСИЮ ───────────────────────────────────────────────
+  cheatsheet: [
+    {
+      color:'#ff6b6b', title:'Статусы платёжной транзакции',
+      items:[
+        'CREATED — транзакция создана, не отправлена',
+        'PENDING — отправлена в банк, ждём ответа',
+        'PROCESSING — банк обрабатывает',
+        'COMPLETED — успешно завершена',
+        'FAILED — ошибка (недостаток средств, отклонена)',
+        'CANCELLED — отменена пользователем / таймаут',
+        'REFUNDED — возврат средств выполнен',
+        '→ State Machine: переходы только в допустимые статусы',
+      ]
+    },
+    {
+      color:'#ffd93d', title:'Idempotency в платежах',
+      items:[
+        'Idempotency-Key: уникальный UUID в заголовке запроса',
+        'Сервер хранит: key → response в Redis/DB (TTL 24h)',
+        'Повторный запрос с тем же ключом → кэшированный ответ',
+        'Защищает от: сетевых таймаутов, retry-шторм',
+        'Kafka: enable.idempotence=true + acks=all',
+        'Consumer: проверь ключ перед обработкой (at-least-once)',
+        'Пример заголовка: Idempotency-Key: 550e8400-e29b-41d4',
+      ]
+    },
+    {
+      color:'#4cc9f0', title:'REST API платёжного сервиса',
+      items:[
+        'POST /v1/payments — создать платёж',
+        'GET /v1/payments/{id} — статус платежа',
+        'POST /v1/payments/{id}/cancel — отменить',
+        'GET /v1/accounts/{id}/balance — баланс',
+        'POST /v1/refunds — инициировать возврат',
+        'Заголовки: Idempotency-Key, X-Request-ID, Authorization: Bearer',
+        'Webhook: POST /callbacks/payment — асинхронное уведомление',
+      ]
+    },
+    {
+      color:'#06d6a0', title:'Saga паттерн: платёж с уведомлением',
+      items:[
+        '1. Payment Service: списать средства (local TX)',
+        '2. Kafka: publish PaymentProcessed event',
+        '3. Notification Service: отправить SMS/email',
+        '4. Audit Service: записать в лог',
+        'Компенсация при ошибке шага 3: RefundPayment command',
+        'Orchestration: Camunda / Temporal управляют шагами',
+        'Choreography: сервисы реагируют на события сами',
+      ]
+    },
+    {
+      color:'#c77dff', title:'OAuth 2.0 для платёжного приложения',
+      items:[
+        'Web/SPA: Authorization Code + PKCE',
+        'Мобильное: Authorization Code + PKCE (Custom URL Scheme)',
+        'M2M (сервис-сервис): Client Credentials',
+        'Scopes: payments:read, payments:write, balance:read',
+        'Access Token: JWT, exp=15 мин (короткий!)',
+        'Refresh Token: HttpOnly cookie, exp=30 дней',
+        'НИКОГДА не хранить refresh в localStorage (XSS)',
+      ]
+    },
+    {
+      color:'#ff9f43', title:'SQL: схема транзакций (PostgreSQL)',
+      items:[
+        'accounts(id UUID PK, balance DECIMAL, currency CHAR(3), version INT)',
+        'transactions(id UUID PK, from_acc UUID FK, to_acc UUID FK)',
+        '  amount DECIMAL, currency CHAR(3), status VARCHAR',
+        '  idempotency_key VARCHAR UNIQUE, created_at TIMESTAMPTZ',
+        'idx_transactions_account ON (from_acc, created_at DESC)',
+        'idx_transactions_status ON (status) WHERE status != \'COMPLETED\'',
+        'Партиционирование по created_at (месячное) при объёме > 100M строк',
+      ]
+    },
+    {
+      color:'#fd79a8', title:'BPMN: элементы платёжного процесса',
+      items:[
+        'Start Event (сообщение) — получен запрос на оплату',
+        'Task (Service) — вызов внешнего банка (REST)',
+        'Task (Script) — валидация суммы и лимитов',
+        'Gateway XOR — успех / недостаток средств / ошибка сети',
+        'Timer Boundary Event — таймаут 30 сек на ответ банка',
+        'Error Boundary Event — техническая ошибка → компенсация',
+        'End Event (Error) — платёж отклонён',
+        'End Event (сообщение) — webhook уведомление отправлено',
+      ]
+    },
+    {
+      color:'#26de81', title:'C4 платёжной системы: шаблон ответа',
+      items:[
+        'L1 Context: User → [Payment System] → Bank Core API, SWIFT, Notification',
+        'L2 Container: API Gateway → Payment Service, Account Service, Audit Service',
+        '  Payment DB (Postgres), Event Bus (Kafka), Cache (Redis)',
+        'L3 Component: PaymentService → PaymentController, PaymentRepository, SagaOrchestrator',
+        'Deployment: K8s, 3 replicas Payment Service, Multi-AZ Postgres',
+        'Начинай всегда с L1: «Покажу общий контекст, затем детализирую»',
+        'Называй аудиторию: «L1 — для бизнеса и стейкхолдеров»',
+      ]
+    },
+    {
+      color:'#a29bfe', title:'Вопросы интервьюеру (обязательно спроси!)',
+      items:[
+        '«Какой текущий стек платёжной системы — Kafka, RabbitMQ?»',
+        '«Есть ли уже OpenAPI-спецификация или начинаем с нуля?»',
+        '«Какой уровень зрелости команды в event-driven архитектуре?»',
+        '«Как сейчас организовано взаимодействие с банком-партнёром?»',
+        '«Какие требования регулятора (PCI DSS, ЦБ РФ) уже учтены?»',
+        '«Планируется ли интеграция с международными платёжными системами?»',
+      ]
+    },
+  ],
+
+  // ── РАЗБОР ТРЕБОВАНИЙ ──────────────────────────────────────────────────────
+  breakdown: [
+    {
+      req:'Платёжные системы и транзакции',
+      weight:'🔴 Критично', color:'#ff4757',
+      topics:['Жизненный цикл транзакции (авторизация→клиринг→расчёт)', 'Идемпотентность операций (Idempotency-Key)', 'Международные переводы: SWIFT, SEPA, ISO 20022', 'Обработка ошибок и компенсации (Saga)', 'AML/KYC, санкционные проверки'],
+      prepTip:'Подготовь кейс из опыта: «На предыдущем проекте я проектировал...». Если нет опыта с платежами — глубоко изучи Idempotency и Saga.'
+    },
+    {
+      req:'Микросервисная архитектура',
+      weight:'🔴 Критично', color:'#ff6b6b',
+      topics:['C4 Model (L1-L3 + Deployment)', 'CQRS и Event Sourcing', 'Паттерн Saga (Orchestration/Choreography)', 'Outbox Pattern', 'API Gateway, Circuit Breaker'],
+      prepTip:'На вопрос «нарисуй архитектуру» — начинай с L1 C4, назови аудиторию, потом детализируй. Всегда говори о trade-offs.'
+    },
+    {
+      req:'Брокеры сообщений',
+      weight:'🟡 Важно', color:'#ffd93d',
+      topics:['Kafka: topics, partitions, consumer groups', 'Гарантии доставки: At-least-once vs Exactly-once', 'Kafka vs RabbitMQ — когда что выбрать', 'AsyncAPI как стандарт описания event-driven API', 'Dead Letter Queue, retry-логика'],
+      prepTip:'Знай наизусть: Kafka = лог событий + аудит. RabbitMQ = task queue + DLQ. В платёжной системе Kafka предпочтительнее для audit trail.'
+    },
+    {
+      req:'REST API и OpenAPI',
+      weight:'🟡 Важно', color:'#4cc9f0',
+      topics:['Проектирование REST-эндпоинтов (ресурсы, не глаголы)', 'OpenAPI 3.0 спецификация (components/$ref, securitySchemes)', 'Версионирование API (/v1/)', 'Webhook vs Polling для асинхронных событий'],
+      prepTip:'Покажи умение писать OpenAPI — хотя бы блок paths + components для payment endpoint.'
+    },
+    {
+      req:'UML, BPMN, C4',
+      weight:'🟡 Важно', color:'#c77dff',
+      topics:['BPMN: Events (Start/End/Intermediate), Tasks, Gateways (XOR/AND/OR), Pools/Lanes', 'UML: Use Case, Sequence Diagram, State Diagram', 'C4: 4 уровня, инструменты (Structurizr, PlantUML)'],
+      prepTip:'На интервью могут попросить нарисовать прямо на экране. Потренируйся в draw.io/Mermaid: BPMN-процесс оплаты и Sequence Diagram OAuth flow.'
+    },
+    {
+      req:'SQL и реляционные БД',
+      weight:'🟢 Базово', color:'#26de81',
+      topics:['Схема транзакционной БД (accounts + transactions)', 'Уровни изоляции (SERIALIZABLE для финансов)', 'Индексирование и партиционирование', 'Отличие OLTP / OLAP'],
+      prepTip:'Знай структуру таблицы транзакций наизусть. На вопрос об изоляции отвечай: SERIALIZABLE или SELECT FOR UPDATE + READ COMMITTED.'
+    },
+    {
+      req:'UI/UX для кроссплатформенных приложений',
+      weight:'🟢 Базово', color:'#00d4aa',
+      topics:['Принципы платёжного UX: прогрессивное раскрытие, оптимистичный UI', 'Accessibility (a11y), адаптивность', 'User Story + критерии приёмки (Given/When/Then)', 'Wireframe vs Prototype vs Mockup'],
+      prepTip:'Достаточно уверенно говорить о UX-принципах и умении работать с дизайнерами через User Story. Упомяни Figma / Storybook.'
+    },
+  ]
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let currentView = 'topics';
+let currentTopic = null;
+let revealedHints = {};
+let timerInterval = null;
+let hintCounters = {};
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderTopicsGrid();
+  renderQuickRef();
+  renderQuickPrompts();
+  renderVacancy();
+
+  document.getElementById('ai-question').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) askAI();
+  });
+});
+
+// ─── VIEWS ───────────────────────────────────────────────────────────────────
+function switchView(view) {
+  currentView = view;
+  currentTopic = null;
+
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick').includes("'" + view + "'")) b.classList.add('active');
+  });
+
+  if (view === 'search') {
+    setTimeout(() => document.getElementById('search-input').focus(), 50);
+  }
+  if (view === 'vacancy') {
+    renderVacancy();
+  }
+}
+
+// ─── TOPICS ──────────────────────────────────────────────────────────────────
+function renderTopicsGrid() {
+  const grid = document.getElementById('topics-grid');
+  grid.innerHTML = TOPICS.map(t => `
+    <button class="topic-card" style="--tc: ${t.color}" onclick="openTopic('${t.id}')">
+      <span class="topic-icon">${t.icon}</span>
+      <div class="topic-name">${t.label}</div>
+      <div class="topic-count">${t.questions.length} вопросов</div>
+    </button>
+  `).join('');
+}
+
+function openTopic(id) {
+  currentTopic = id;
+  const t = TOPICS.find(x => x.id === id);
+  if (!t) return;
+
+  document.getElementById('detail-icon').textContent = t.icon;
+  document.getElementById('detail-name').textContent = t.label;
+  document.getElementById('detail-bar').style.background = t.color;
+
+  const list = document.getElementById('detail-questions');
+  list.innerHTML = t.questions.map((item, i) => {
+    const key = `${id}-${i}`;
+    return buildQCard(key, item.q, item.hint, t.color, `Q${i+1}`, item.svg || '');
+  }).join('');
+
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-topic-detail').classList.add('active');
+}
+
+function backToTopics() {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-topics').classList.add('active');
+}
+
+// ─── QUESTION CARD ────────────────────────────────────────────────────────────
+function buildQCard(key, qText, hint, color, label, svg) {
+  const revealed = revealedHints[key];
+  const svgBlock = svg ? `<div class="q-svg">${svg}</div>` : '';
+  return `
+    <div class="q-card" id="qcard-${key}">
+      <div class="q-head">
+        <div class="q-meta">
+          <span class="q-num" style="color:${color}">${label}</span>
+          <span class="q-text">${qText}</span>
+        </div>
+        <button class="hint-btn ${revealed ? 'revealed' : ''}" id="hbtn-${key}"
+          onclick="toggleHint('${key}', '${color.replace('#','')}')">
+          ${revealed ? 'Скрыть' : 'Подсказка'}
+        </button>
+      </div>
+      <div class="q-hint ${revealed ? 'open' : ''}" id="hint-${key}"
+        style="border-top-color:${color}44; background:${color}0d">
+        <div class="hint-text">${hint}</div>
+        ${svgBlock}
+      </div>
+    </div>
+  `;
+}
+
+function toggleHint(key, colorHex) {
+  const color = '#' + colorHex;
+  revealedHints[key] = !revealedHints[key];
+  const revealed = revealedHints[key];
+
+  const hintEl = document.getElementById('hint-' + key);
+  const btnEl = document.getElementById('hbtn-' + key);
+
+  if (hintEl) {
+    hintEl.classList.toggle('open', revealed);
+    hintEl.style.borderTopColor = color + '44';
+    hintEl.style.background = color + '0d';
+  }
+  if (btnEl) {
+    btnEl.textContent = revealed ? 'Скрыть' : 'Подсказка';
+    btnEl.classList.toggle('revealed', revealed);
+    if (revealed) {
+      btnEl.style.borderColor = color;
+      btnEl.style.color = color;
+      btnEl.style.background = color + '1a';
+    } else {
+      btnEl.style.borderColor = '';
+      btnEl.style.color = '';
+      btnEl.style.background = '';
+    }
+  }
+}
+
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+function doSearch(query) {
+  const q = query.trim().toLowerCase();
+  const countEl = document.getElementById('search-count');
+  const resultsEl = document.getElementById('search-results');
+
+  if (q.length < 2) {
+    countEl.textContent = '';
+    resultsEl.innerHTML = '';
+    return;
+  }
+
+  const results = [];
+  TOPICS.forEach(t => {
+    t.questions.forEach((item, i) => {
+      if (item.q.toLowerCase().includes(q) || item.hint.toLowerCase().includes(q)) {
+        results.push({ ...item, topicLabel: t.label, topicColor: t.color, topicIcon: t.icon, key: `sr-${t.id}-${i}` });
+      }
+    });
+  });
+
+  countEl.textContent = `Найдено: ${results.length} результатов`;
+  resultsEl.innerHTML = results.map(r => `
+    <div class="q-card" id="qcard-${r.key}">
+      <div class="q-head">
+        <div class="q-meta">
+          <div style="flex:1">
+            <div class="sr-topic-label" style="color:${r.topicColor}">${r.topicIcon} ${r.topicLabel}</div>
+            <div class="q-text">${r.q}</div>
+          </div>
+        </div>
+        <button class="hint-btn" id="hbtn-${r.key}"
+          onclick="toggleHint('${r.key}', '${r.topicColor.replace('#','')}')">
+          Ответ
+        </button>
+      </div>
+      <div class="q-hint" id="hint-${r.key}"
+        style="border-top-color:${r.topicColor}44; background:${r.topicColor}0d">
+        ${r.hint}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── AI ──────────────────────────────────────────────────────────────────────
+function renderQuickPrompts() {
+  const el = document.getElementById('quick-prompts');
+  el.innerHTML = AI_QUICK_PROMPTS.map(p => `
+    <button class="qp-btn" onclick="setAIQuestion(this.textContent)">${p}</button>
+  `).join('');
+}
+
+function setAIQuestion(text) {
+  document.getElementById('ai-question').value = text;
+  document.getElementById('ai-question').focus();
+}
+
+async function askAI() {
+  const q = document.getElementById('ai-question').value.trim();
+  if (!q) return;
+
+  const btn = document.getElementById('ai-ask-btn');
+  const loading = document.getElementById('ai-loading');
+  const answer = document.getElementById('ai-answer');
+
+  btn.disabled = true;
+  loading.classList.add('show');
+  answer.classList.remove('show');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Ты помощник для технического интервью системного/fullstack аналитика. Дай чёткий, структурированный ответ. Используй bullet points и короткие абзацы. Будь конкретным, приводи примеры. Максимум 300 слов. Вопрос: ${q}`
+        }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Не удалось получить ответ';
+    answer.textContent = text;
+    answer.classList.add('show');
+  } catch(e) {
+    answer.textContent = 'Ошибка соединения. Проверьте доступ к API.';
+    answer.classList.add('show');
+  }
+
+  loading.classList.remove('show');
+  btn.disabled = false;
+}
+
+// ─── QUICKREF ────────────────────────────────────────────────────────────────
+let activeQRTab = 'all';
+
+function renderQuickRef() {
+  // render tabs
+  const tabsEl = document.getElementById('qr-tabs');
+  tabsEl.innerHTML = QUICKREF.tabs.map(t => `
+    <button class="qr-tab ${t.id === activeQRTab ? 'active' : ''}"
+      onclick="switchQRTab('${t.id}')">${t.label}</button>
+  `).join('');
+
+  // render cards
+  const grid = document.getElementById('qr-grid');
+  const cards = activeQRTab === 'all'
+    ? QUICKREF.cards
+    : QUICKREF.cards.filter(c => c.cat === activeQRTab);
+
+  grid.innerHTML = cards.map(card => {
+    if (card.type === 'wide') {
+      return `
+        <div class="qr-card-wide" style="border-color:${card.color}33">
+          <div class="qr-wide-header">
+            <div class="qr-wide-title" style="color:${card.color}">${card.title}</div>
+            ${card.badge ? `<span class="qr-wide-badge" style="color:${card.color};border-color:${card.color}44">${card.badge}</span>` : ''}
+            ${card.desc ? `<div class="qr-wide-desc">${card.desc}</div>` : ''}
+          </div>
+          <div class="qr-sections">
+            ${card.sections.map(sec => `
+              <div class="qr-section" style="border-color:${sec.color}22">
+                <div class="qr-section-title" style="color:${sec.color}">${sec.title}</div>
+                ${sec.items.map(item => `
+                  <div class="qr-item">${item}</div>
+                `).join('')}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+    // normal card
+    return `
+      <div class="qr-card" style="border-color:${card.color}22">
+        <div class="qr-title" style="color:${card.color}">${card.title}</div>
+        ${card.items.map(item => `
+          <div class="qr-item">
+            <span class="qr-bullet" style="color:${card.color}">▸</span>
+            ${item}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function switchQRTab(id) {
+  activeQRTab = id;
+  renderQuickRef();
+}
+
+// ─── VACANCY ─────────────────────────────────────────────────────────────────
+let activeVacTab = 'forecast';
+
+function renderVacancy() {
+  // tabs
+  const tabsEl = document.getElementById('vac-tabs');
+  tabsEl.innerHTML = VACANCY.tabs.map(t => `
+    <button class="vac-tab ${t.id === activeVacTab ? 'active' : ''}"
+      onclick="switchVacTab('${t.id}')">${t.label}</button>
+  `).join('');
+
+  const el = document.getElementById('vac-content');
+
+  if (activeVacTab === 'forecast') {
+    el.innerHTML = `<div class="vac-questions-grid">
+      ${VACANCY.questions.map(block => `
+        <div class="vq-block" style="border-color:${block.color}33">
+          <div class="vq-block-header" onclick="toggleVQ('vq-${block.id}')">
+            <span style="color:${block.color};font-size:16px">●</span>
+            <div class="vq-block-title" style="color:${block.color}">${block.title}</div>
+            <div class="vq-block-meta">
+              <span class="vq-prob ${block.prob === 'high' ? 'prob-high' : block.prob === 'mid' ? 'prob-mid' : 'prob-low'}">${block.probLabel}</span>
+              <span>${block.qs.length} вопросов</span>
+            </div>
+            <span class="vq-chevron" id="chev-vq-${block.id}">▶</span>
+          </div>
+          <div class="vq-body" id="vq-${block.id}">
+            ${block.qs.map((q, i) => `
+              <div class="vq-question">
+                <div class="vq-q-num" style="background:${block.color}22;color:${block.color}">${i+1}</div>
+                <div>
+                  <div class="vq-q-text">${q.q}</div>
+                  <div class="vq-q-hint"><b>Что ожидают:</b> ${q.hint}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  else if (activeVacTab === 'cheatsheet') {
+    el.innerHTML = `<div class="vac-cheat-grid">
+      ${VACANCY.cheatsheet.map(card => `
+        <div class="vac-card" style="border-color:${card.color}33">
+          <div class="vac-card-title" style="color:${card.color}">${card.title}</div>
+          ${card.items.map(item => `
+            <div class="vac-card-item">
+              <span style="color:${card.color};opacity:0.5;min-width:12px">▸</span>
+              <span>${item}</span>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  else if (activeVacTab === 'requirements') {
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
+      ${VACANCY.breakdown.map(item => `
+        <div class="vac-card" style="border-color:${item.color}33">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div class="vac-card-title" style="color:${item.color};margin:0">${item.req}</div>
+            <span style="font-size:12px;color:${item.color};opacity:0.8;margin-left:auto">${item.weight}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Что проверяют</div>
+              ${item.topics.map(t => `
+                <div class="vac-card-item" style="padding:3px 0">
+                  <span style="color:${item.color};opacity:0.4;min-width:12px">▸</span>
+                  <span style="font-size:12px">${t}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border-radius:8px;padding:12px;border:1px solid rgba(255,255,255,0.05)">
+              <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">💡 Совет</div>
+              <div style="font-size:12px;color:#888;line-height:1.55">${item.prepTip}</div>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+}
+
+function switchVacTab(id) {
+  activeVacTab = id;
+  renderVacancy();
+}
+
+function toggleVQ(id) {
+  const body = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id);
+  body.classList.toggle('open');
+  if (chev) chev.classList.toggle('open');
+}
+
+// ─── TIMER ───────────────────────────────────────────────────────────────────
+function startTimer(mins) {
+  if (timerInterval) clearInterval(timerInterval);
+  let secs = mins * 60;
+  const display = document.getElementById('timer-display');
+  display.style.display = 'block';
+  display.classList.remove('panic');
+
+  const update = () => {
+    const m = String(Math.floor(secs / 60)).padStart(2, '0');
+    const s = String(secs % 60).padStart(2, '0');
+    display.textContent = `${m}:${s}`;
+    if (secs <= 30) display.classList.add('panic');
+    if (secs <= 0) {
+      clearInterval(timerInterval);
+      display.textContent = '00:00';
+      setTimeout(() => { display.style.display = 'none'; display.classList.remove('panic'); }, 3000);
+    }
+    secs--;
+  };
+
+  update();
+  timerInterval = setInterval(update, 1000);
+}
+</script>
+</body>
+</html>
